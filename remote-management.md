@@ -1,24 +1,65 @@
-# Remote management
+# Remote Theme Management (Git Updater)
 
-## Deployment
+The [Git Remote Updater](https://git-updater.com/git-remote-updater/) plugin was created to simplify remote management of Git Updater–supported plugins and themes. You need the **Site URL** and **REST API key** for Git Remote Updater settings (or other tools: MainWP, ManageWP, InfiniteWP, iThemes Sync, custom webhooks).
 
-1. Copy the `free-backlinks-generator` folder to `wp-content/themes/` on the server (or deploy via CI).
-2. In **Appearance → Themes**, activate **Free Backlinks Generator**.
-3. On activation, the theme creates core pages (Home, Register, Login, Dashboard, etc.) and flushes rewrite rules.
-4. Visit **Settings → Permalinks** and click **Save** once if `/community/` or custom URLs 404.
+> See the [Git Updater Knowledge Base](https://git-updater.com/knowledge-base/) for the full list of attributes and advanced usage.
 
-## Updates
+---
 
-- Bump `Version` in `style.css` and the `FBG_VERSION` constant in `functions.php` together.
-- Clear server and CDN caches after CSS/JS changes.
-- Run database backups before major WordPress or PHP upgrades.
+## Site & API Key
 
-## Configuration checklist
+| Setting | Value |
+|--------|--------|
+| **Site URL** | https://temp6.devigontech.com |
+| **REST API key** | `4482d949aedba30fcfc5898facb5c63c` |
 
-- Set **Settings → Reading** to a static front page if the Home template is not already assigned (activation sets `home` when created).
-- Configure **SMTP** or a transactional email provider so registration, reset, and moderation emails deliver reliably.
-- Harden **wp-admin** (2FA, limited login attempts at the server or plugin level) in addition to theme login throttling.
+Use the **Site URL** and **REST API key** in your remote management tool (for example, in the settings for Git Remote Updater or a custom webhook integration).
 
-## Headless / API
+> **Security:** Anyone with this API key can trigger theme/plugin updates on the site. Do not expose it in client-side code. If this repository is ever made public, move the key into a secure secrets manager and remove it from version control.
 
-- REST user enumeration is restricted for users who cannot `list_users`; adjust `inc/security.php` if you rely on public user endpoints.
+---
+
+## REST API Endpoints
+
+Base path: `https://temp6.devigontech.com/wp-json/git-updater/v1/`  
+All endpoints require the query parameter: `key=4482d949aedba30fcfc5898facb5c63c`
+
+### Update (webhook / remote update)
+
+**Endpoint base:**  
+`https://temp6.devigontech.com/wp-json/git-updater/v1/update/?key=4482d949aedba30fcfc5898facb5c63c`
+
+Append standard Git Updater query parameters such as:
+
+- `theme=` – the theme slug to update
+- `branch=`, `tag=`, `committish=` – which version/branch to deploy
+- `override=` – whether to override the stored branch/tag
+
+Example (curl, updating this theme by slug — matches `Text Domain` in `style.css`):
+
+```bash
+curl "https://temp6.devigontech.com/wp-json/git-updater/v1/update/?key=4482d949aedba30fcfc5898facb5c63c&theme=free-backlinks-generator"
+```
+
+### Reset branch
+
+Use if the theme is stuck on a deleted branch and Git Updater can’t connect.
+
+**Endpoint base:**  
+`https://temp6.devigontech.com/wp-json/git-updater/v1/reset-branch/?key=4482d949aedba30fcfc5898facb5c63c`
+
+Example (reset this theme’s branch — ensure the `theme=` value matches the theme directory slug):
+
+```bash
+curl "https://temp6.devigontech.com/wp-json/git-updater/v1/reset-branch/?key=4482d949aedba30fcfc5898facb5c63c&theme=free-backlinks-generator"
+```
+
+---
+
+## References
+
+- [Git Updater Knowledge Base](https://git-updater.com/knowledge-base/)
+- [Required Headers](https://git-updater.com/knowledge-base/required-headers/)
+- [Remote Management – REST API Endpoints](https://git-updater.com/knowledge-base/remote-management-restful-endpoints/)
+- [Versions & Branches](https://git-updater.com/knowledge-base/versions-branches/)
+- [Git Remote Updater plugin](https://git-updater.com/git-remote-updater/)
