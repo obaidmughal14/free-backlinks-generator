@@ -1,0 +1,151 @@
+(function () {
+	'use strict';
+
+	var nav = document.getElementById('main-nav');
+	if (nav) {
+		window.addEventListener(
+			'scroll',
+			function () {
+				if (window.scrollY > 80) {
+					nav.classList.add('is-scrolled');
+				} else {
+					nav.classList.remove('is-scrolled');
+				}
+			},
+			{ passive: true }
+		);
+	}
+
+	document.querySelectorAll('.nav-hamburger').forEach(function (btn) {
+		var id = btn.getAttribute('aria-controls');
+		var drawer = id ? document.getElementById(id) : null;
+		if (!drawer) return;
+		btn.addEventListener('click', function () {
+			var open = btn.getAttribute('aria-expanded') === 'true';
+			btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+			drawer.hidden = open;
+		});
+	});
+
+	var stats = document.getElementById('fbg-stats-bar');
+	if (stats && 'IntersectionObserver' in window) {
+		var done = false;
+		var obs = new IntersectionObserver(
+			function (entries) {
+				entries.forEach(function (e) {
+					if (!e.isIntersecting || done) return;
+					done = true;
+					stats.querySelectorAll('.fbg-stat__num').forEach(function (el) {
+						var target = parseFloat(el.getAttribute('data-target'));
+						if (isNaN(target)) target = 0;
+						var suffix = el.getAttribute('data-suffix') || '';
+						var dec = String(target).indexOf('.') >= 0;
+						var start = 0;
+						var dur = 1200;
+						var t0 = null;
+						function step(ts) {
+							if (!t0) t0 = ts;
+							var p = Math.min(1, (ts - t0) / dur);
+							var val = start + (target - start) * p;
+							el.textContent = dec ? val.toFixed(1) : Math.floor(val).toLocaleString();
+							if (suffix) el.textContent += suffix;
+							if (p < 1) requestAnimationFrame(step);
+						}
+						requestAnimationFrame(step);
+					});
+				});
+			},
+			{ threshold: 0.2 }
+		);
+		obs.observe(stats);
+	}
+
+	var grid = document.getElementById('fbg-post-grid');
+	var loadBtn = document.getElementById('fbg-load-more');
+	var endMsg = document.getElementById('fbg-end-results');
+	if (grid && loadBtn && typeof fbgMain !== 'undefined') {
+		var paged = 1;
+		var maxPages = parseInt(grid.getAttribute('data-max') || '1', 10);
+		var niche = 'all';
+		var order = 'newest';
+		var searchQ = '';
+
+		function fetchPosts(append) {
+			var fd = new FormData();
+			fd.append('action', 'fbg_archive_posts');
+			fd.append('nonce', fbgMain.nonce);
+			fd.append('paged', String(paged));
+			fd.append('niche', niche);
+			fd.append('order', order);
+			fd.append('s', searchQ);
+			loadBtn.disabled = true;
+			fetch(fbgMain.ajaxUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
+				.then(function (r) {
+					return r.json();
+				})
+				.then(function (json) {
+					loadBtn.disabled = false;
+					if (!json || !json.success) return;
+					if (append) {
+						var div = document.createElement('div');
+						div.innerHTML = json.data.html;
+						while (div.firstChild) {
+							grid.appendChild(div.firstChild);
+						}
+					} else {
+						grid.innerHTML = json.data.html;
+					}
+					maxPages = json.data.max_pages || 1;
+					if (paged >= maxPages) {
+						loadBtn.hidden = true;
+						if (endMsg) endMsg.hidden = false;
+					} else {
+						loadBtn.hidden = false;
+						if (endMsg) endMsg.hidden = true;
+					}
+				})
+				.catch(function () {
+					loadBtn.disabled = false;
+				});
+		}
+
+		document.querySelectorAll('.fbg-pill').forEach(function (pill) {
+			pill.addEventListener('click', function () {
+				document.querySelectorAll('.fbg-pill').forEach(function (p) {
+					p.classList.remove('is-active');
+				});
+				pill.classList.add('is-active');
+				niche = pill.getAttribute('data-niche') || 'all';
+				paged = 1;
+				fetchPosts(false);
+			});
+		});
+
+		var orderEl = document.getElementById('fbg-order');
+		if (orderEl) {
+			orderEl.addEventListener('change', function () {
+				order = orderEl.value;
+				paged = 1;
+				fetchPosts(false);
+			});
+		}
+
+		var searchEl = document.getElementById('fbg-search-archive');
+		if (searchEl) {
+			var t;
+			searchEl.addEventListener('input', function () {
+				clearTimeout(t);
+				t = setTimeout(function () {
+					searchQ = searchEl.value;
+					paged = 1;
+					fetchPosts(false);
+				}, 300);
+			});
+		}
+
+		loadBtn.addEventListener('click', function () {
+			paged += 1;
+			fetchPosts(true);
+		});
+	}
+})();

@@ -1,0 +1,17 @@
+/* Above-the-fold minimal reset + variables (optional inline). */
+:root {
+	--color-primary: #0a0f1e;
+	--color-accent: #4f8ef7;
+	--color-bg: #f8f9ff;
+	--color-text: #0a0f1e;
+}
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+body {
+	margin: 0;
+	background: var(--color-bg);
+	color: var(--color-text);
+}
