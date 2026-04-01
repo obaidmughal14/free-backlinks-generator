@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.0.3' );
+define( 'FBG_VERSION', '1.0.4' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -129,6 +129,35 @@ function fbg_enqueue_assets() {
 		wp_enqueue_style( 'fbg-blog', FBG_URI . '/assets/css/blog.css', array( 'fbg-main' ), FBG_VERSION );
 	}
 
+	if (
+		is_page_template(
+			array(
+				'page-templates/page-affiliate-program.php',
+				'page-templates/page-cookie-policy.php',
+				'page-templates/page-gdpr-notice.php',
+			)
+		)
+	) {
+		wp_enqueue_style( 'fbg-marketing', FBG_URI . '/assets/css/fbg-marketing.css', array( 'fbg-main' ), FBG_VERSION );
+	}
+
+	if ( is_page_template( 'page-templates/page-affiliate-program.php' ) ) {
+		wp_enqueue_script( 'fbg-affiliate', FBG_URI . '/assets/js/affiliate.js', array(), FBG_VERSION, true );
+		wp_localize_script(
+			'fbg-affiliate',
+			'fbgAffiliate',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'fbg_affiliate_nonce' ),
+				'strings' => array(
+					'sending' => __( 'Sending…', 'free-backlinks-generator' ),
+					'sent'    => __( 'Application received. We will email you within 2 business days.', 'free-backlinks-generator' ),
+					'error'   => __( 'Something went wrong. Please try again or email us from the Contact page.', 'free-backlinks-generator' ),
+				),
+			)
+		);
+	}
+
 	wp_enqueue_script( 'fbg-main', FBG_URI . '/assets/js/main.js', array(), FBG_VERSION, true );
 	wp_localize_script(
 		'fbg-main',
@@ -167,6 +196,17 @@ function fbg_body_class( $classes ) {
 	}
 	if ( is_page_template( 'page-templates/page-submit-post.php' ) ) {
 		$classes[] = 'fbg-submit-page';
+	}
+	if (
+		is_page_template(
+			array(
+				'page-templates/page-affiliate-program.php',
+				'page-templates/page-cookie-policy.php',
+				'page-templates/page-gdpr-notice.php',
+			)
+		)
+	) {
+		$classes[] = 'fbg-marketing-page';
 	}
 	return $classes;
 }
@@ -241,6 +281,21 @@ function fbg_theme_activation() {
 			'title' => 'Terms of Service',
 			'slug'  => 'terms-of-service',
 		),
+		array(
+			'title'    => 'Affiliate Program',
+			'slug'     => 'affiliate-program',
+			'template' => 'page-templates/page-affiliate-program.php',
+		),
+		array(
+			'title'    => 'Cookie Policy',
+			'slug'     => 'cookie-policy',
+			'template' => 'page-templates/page-cookie-policy.php',
+		),
+		array(
+			'title'    => 'GDPR Notice',
+			'slug'     => 'gdpr-notice',
+			'template' => 'page-templates/page-gdpr-notice.php',
+		),
 	);
 
 	foreach ( $pages as $p ) {
@@ -271,3 +326,47 @@ function fbg_theme_activation() {
 	flush_rewrite_rules();
 }
 add_action( 'after_switch_theme', 'fbg_theme_activation' );
+
+/**
+ * Create affiliate & legal pages once for sites that activated the theme before these pages existed.
+ */
+function fbg_maybe_install_marketing_pages() {
+	if ( ! current_user_can( 'manage_options' ) || get_option( 'fbg_marketing_pages_v1' ) ) {
+		return;
+	}
+	$defs = array(
+		array(
+			'title'    => 'Affiliate Program',
+			'slug'     => 'affiliate-program',
+			'template' => 'page-templates/page-affiliate-program.php',
+		),
+		array(
+			'title'    => 'Cookie Policy',
+			'slug'     => 'cookie-policy',
+			'template' => 'page-templates/page-cookie-policy.php',
+		),
+		array(
+			'title'    => 'GDPR Notice',
+			'slug'     => 'gdpr-notice',
+			'template' => 'page-templates/page-gdpr-notice.php',
+		),
+	);
+	foreach ( $defs as $p ) {
+		if ( get_page_by_path( $p['slug'] ) ) {
+			continue;
+		}
+		$post_id = wp_insert_post(
+			array(
+				'post_title'  => $p['title'],
+				'post_name'   => $p['slug'],
+				'post_status' => 'publish',
+				'post_type'   => 'page',
+			)
+		);
+		if ( $post_id && ! is_wp_error( $post_id ) ) {
+			update_post_meta( $post_id, '_wp_page_template', $p['template'] );
+		}
+	}
+	update_option( 'fbg_marketing_pages_v1', 1 );
+}
+add_action( 'admin_init', 'fbg_maybe_install_marketing_pages', 30 );

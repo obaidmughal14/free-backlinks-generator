@@ -652,3 +652,90 @@ function fbg_maybe_export_gdpr() {
 	exit;
 }
 add_action( 'template_redirect', 'fbg_maybe_export_gdpr', 1 );
+
+/**
+ * Public affiliate program application (rate-limited, stored + emailed).
+ */
+function fbg_handle_affiliate_apply() {
+	check_ajax_referer( 'fbg_affiliate_nonce', 'nonce' );
+
+	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '0';
+	$key = 'fbg_affiliate_rate_' . md5( $ip );
+	$hit = (int) get_transient( $key );
+	if ( $hit >= 5 ) {
+		wp_send_json_error( array( 'message' => __( 'Too many applications from this network. Please try again in an hour.', 'free-backlinks-generator' ) ) );
+	}
+	set_transient( $key, $hit + 1, HOUR_IN_SECONDS );
+
+	$name  = isset( $_POST['full_name'] ) ? sanitize_text_field( wp_unslash( $_POST['full_name'] ) ) : '';
+	$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+	$web   = isset( $_POST['website'] ) ? esc_url_raw( wp_unslash( $_POST['website'] ) ) : '';
+	$aud   = isset( $_POST['audience'] ) ? sanitize_text_field( wp_unslash( $_POST['audience'] ) ) : '';
+	$niche = isset( $_POST['niche'] ) ? sanitize_text_field( wp_unslash( $_POST['niche'] ) ) : '';
+	$plan  = isset( $_POST['promo_plan'] ) ? sanitize_textarea_field( wp_unslash( $_POST['promo_plan'] ) ) : '';
+	$agree = ! empty( $_POST['agree_terms'] );
+
+	if ( strlen( $name ) < 2 || ! is_email( $email ) ) {
+		wp_send_json_error( array( 'message' => __( 'Please enter a valid name and email.', 'free-backlinks-generator' ) ) );
+	}
+	if ( ! $web || ! filter_var( $web, FILTER_VALIDATE_URL ) || ! preg_match( '#^https?://#i', $web ) ) {
+		wp_send_json_error( array( 'message' => __( 'Please enter a valid website URL (https://).', 'free-backlinks-generator' ) ) );
+	}
+	$allowed_aud = array( 'under-5k', '5k-25k', '25k-100k', '100k-plus' );
+	if ( ! in_array( $aud, $allowed_aud, true ) ) {
+		wp_send_json_error( array( 'message' => __( 'Please select monthly reach.', 'free-backlinks-generator' ) ) );
+	}
+	if ( strlen( $niche ) < 2 || strlen( $plan ) < 20 ) {
+		wp_send_json_error( array( 'message' => __( 'Please describe your niche and how you will promote us (at least a short paragraph).', 'free-backlinks-generator' ) ) );
+	}
+	if ( ! $agree ) {
+		wp_send_json_error( array( 'message' => __( 'You must agree to the partner terms.', 'free-backlinks-generator' ) ) );
+	}
+
+	$lead = array(
+		'ts'    => time(),
+		'ip'    => $ip,
+		'name'  => $name,
+		'email' => $email,
+		'web'   => $web,
+		'aud'   => $aud,
+		'niche' => $niche,
+		'plan'  => $plan,
+	);
+	$leads = get_option( 'fbg_affiliate_leads', array() );
+	if ( ! is_array( $leads ) ) {
+		$leads = array();
+	}
+	array_unshift( $leads, $lead );
+	$leads = array_slice( $leads, 0, 100 );
+	update_option( 'fbg_affiliate_leads', $leads, false );
+
+	$admin = get_option( 'admin_email' );
+	if ( is_email( $admin ) && function_exists( 'fbg_wp_mail_html' ) && function_exists( 'fbg_email_html_layout' ) ) {
+		$subj = sprintf(
+			/* translators: %s site name */
+			__( '[%s] New affiliate application', 'free-backlinks-generator' ),
+			get_bloginfo( 'name' )
+		);
+		$rows = '<table role="presentation" style="width:100%;font-size:15px;border-collapse:collapse;">'
+			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Name', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $name ) . '</td></tr>'
+			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Email', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $email ) . '</td></tr>'
+			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Website', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $web ) . '</td></tr>'
+			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Reach band', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $aud ) . '</td></tr>'
+			. '<tr><td style="padding:8px 0;"><strong>' . esc_html__( 'Niche', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;">' . esc_html( $niche ) . '</td></tr></table>'
+			. '<p style="margin-top:20px;"><strong>' . esc_html__( 'Promotion plan', 'free-backlinks-generator' ) . '</strong></p><p style="white-space:pre-wrap;color:#475569;">' . esc_html( $plan ) . '</p>';
+		$html = fbg_email_html_layout(
+			__( 'New partner application', 'free-backlinks-generator' ),
+			__( 'Affiliate application received', 'free-backlinks-generator' ),
+			$rows,
+			__( 'WordPress admin', 'free-backlinks-generator' ),
+			admin_url(),
+			__( 'Recent applications are stored in the option fbg_affiliate_leads (up to 100 entries).', 'free-backlinks-generator' )
+		);
+		fbg_wp_mail_html( $admin, $subj, $html );
+	}
+
+	wp_send_json_success();
+}
+add_action( 'wp_ajax_nopriv_fbg_affiliate_apply', 'fbg_handle_affiliate_apply' );
+add_action( 'wp_ajax_fbg_affiliate_apply', 'fbg_handle_affiliate_apply' );

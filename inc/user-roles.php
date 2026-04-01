@@ -70,19 +70,21 @@ function fbg_restrict_member_wp_admin() {
 add_action( 'admin_init', 'fbg_restrict_member_wp_admin', 0 );
 
 /**
- * Hide the WordPress admin bar for members on the front end.
+ * Show the WordPress admin bar only to users with the Administrator role.
  */
-function fbg_hide_admin_bar_for_members( $show ) {
+function fbg_show_admin_bar_only_for_administrators( $show ) {
 	if ( ! is_user_logged_in() ) {
 		return $show;
 	}
 	$user = wp_get_current_user();
-	if ( in_array( 'fbg_member', (array) $user->roles, true ) && ! current_user_can( 'manage_options' ) ) {
-		return false;
+	$is_administrator = in_array( 'administrator', (array) $user->roles, true );
+	$is_network_super = is_multisite() && is_super_admin( $user->ID );
+	if ( $is_administrator || $is_network_super ) {
+		return $show;
 	}
-	return $show;
+	return false;
 }
-add_filter( 'show_admin_bar', 'fbg_hide_admin_bar_for_members', 99 );
+add_filter( 'show_admin_bar', 'fbg_show_admin_bar_only_for_administrators', 99 );
 
 /**
  * After login, never send FBG members to wp-admin.

@@ -598,6 +598,25 @@ h3 {
 	padding-block: var(--space-md);
 	font-size: 0.9rem;
 }
+.fbg-footer__bar-inner {
+	text-align: center;
+}
+.fbg-footer__copyright-line {
+	margin: 0 0 var(--space-sm);
+}
+.fbg-footer__credit {
+	margin: 0;
+	font-size: 0.85rem;
+	color: rgba(255, 255, 255, 0.65);
+}
+.fbg-footer__credit a {
+	color: var(--color-mint);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.fbg-footer__credit a:hover {
+	color: #fff;
+}
 
 /* Page */
 .fbg-page-title {
