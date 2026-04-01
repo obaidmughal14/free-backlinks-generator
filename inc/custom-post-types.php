@@ -196,6 +196,122 @@ function fbg_transition_publish_guest_post( $new, $old, $post ) {
 add_action( 'transition_post_status', 'fbg_transition_publish_guest_post', 10, 3 );
 
 /**
+ * Remember when a guest post moves from pending to draft (admin rejection path).
+ *
+ * @param string  $new New status.
+ * @param string  $old Old status.
+ * @param WP_Post $post Post.
+ */
+function fbg_flag_pending_to_draft_for_rejection( $new, $old, $post ) {
+	if ( ! $post || 'fbg_post' !== $post->post_type ) {
+		return;
+	}
+	if ( 'pending' === $old && 'draft' === $new ) {
+		set_transient( 'fbg_draft_from_pending_' . $post->ID, 1, 120 );
+	}
+}
+add_action( 'transition_post_status', 'fbg_flag_pending_to_draft_for_rejection', 5, 3 );
+
+/**
+ * Meta box: optional rejection email when moving pending → draft.
+ */
+function fbg_add_rejection_metabox() {
+	if ( ! current_user_can( 'edit_others_posts' ) && ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	add_meta_box(
+		'fbg_rejection',
+		__( 'Author notification (rejection)', 'free-backlinks-generator' ),
+		'fbg_render_rejection_metabox',
+		'fbg_post',
+		'side',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'fbg_add_rejection_metabox' );
+
+/**
+ * Rejection meta box UI.
+ *
+ * @param WP_Post $post Post.
+ */
+function fbg_render_rejection_metabox( $post ) {
+	if ( ! current_user_can( 'edit_others_posts' ) && ! current_user_can( 'manage_options' ) ) {
+		echo '<p>' . esc_html__( 'Only moderators can use this box.', 'free-backlinks-generator' ) . '</p>';
+		return;
+	}
+	wp_nonce_field( 'fbg_rejection_save', 'fbg_rejection_nonce' );
+	?>
+	<p style="margin-top:0;"><?php esc_html_e( 'When you change status from Pending to Draft, you can email the author with feedback.', 'free-backlinks-generator' ); ?></p>
+	<p>
+		<label>
+			<input type="checkbox" name="fbg_rejection_notify" value="1">
+			<?php esc_html_e( 'Email author about rejection', 'free-backlinks-generator' ); ?>
+		</label>
+	</p>
+	<p>
+		<label for="fbg_rejection_reason"><strong><?php esc_html_e( 'Message to author', 'free-backlinks-generator' ); ?></strong></label>
+		<textarea name="fbg_rejection_reason" id="fbg_rejection_reason" rows="5" class="large-text" placeholder="<?php esc_attr_e( 'Explain what to improve so they can revise and resubmit…', 'free-backlinks-generator' ); ?>"></textarea>
+	</p>
+	<?php
+}
+
+/**
+ * After save: send rejection email if pending → draft + checkbox + message.
+ *
+ * @param int     $post_id Post ID.
+ * @param WP_Post $post    Post object.
+ */
+function fbg_save_rejection_notification( $post_id, $post ) {
+	if ( ! $post || 'fbg_post' !== $post->post_type ) {
+		return;
+	}
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	if ( ! isset( $_POST['fbg_rejection_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['fbg_rejection_nonce'] ) ), 'fbg_rejection_save' ) ) {
+		return;
+	}
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$key = 'fbg_draft_from_pending_' . $post_id;
+	if ( ! get_transient( $key ) ) {
+		return;
+	}
+	delete_transient( $key );
+
+	if ( 'draft' !== $post->post_status ) {
+		return;
+	}
+
+	$notify = ! empty( $_POST['fbg_rejection_notify'] );
+	$reason = isset( $_POST['fbg_rejection_reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['fbg_rejection_reason'] ) ) : '';
+
+	if ( ! $notify || '' === trim( $reason ) ) {
+		return;
+	}
+
+	update_post_meta( $post_id, '_fbg_content_status', 'rejected' );
+	update_post_meta( $post_id, '_fbg_rejection_reason', $reason );
+
+	$author_id = (int) $post->post_author;
+	fbg_send_rejection_email( $author_id, $post->post_title, $reason );
+	fbg_create_notification(
+		$author_id,
+		'post_rejected',
+		sprintf(
+			/* translators: %s post title */
+			__( 'Your guest post "%s" was not approved. Check your email for the reviewer\'s notes.', 'free-backlinks-generator' ),
+			$post->post_title
+		),
+		$post_id
+	);
+}
+add_action( 'save_post_fbg_post', 'fbg_save_rejection_notification', 25, 2 );
+
+/**
  * Pending post: block single view for non-privileged users.
  */
 function fbg_restrict_pending_single() {

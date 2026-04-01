@@ -36,3 +36,71 @@ function fbg_auth_redirect_logged_in() {
 	}
 }
 add_action( 'template_redirect', 'fbg_auth_redirect_logged_in', 1 );
+
+/**
+ * Block wp-admin for FBG members (front-end dashboard only). Allows AJAX and media upload endpoints.
+ */
+function fbg_restrict_member_wp_admin() {
+	if ( ! is_user_logged_in() ) {
+		return;
+	}
+	if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		return;
+	}
+	if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		return;
+	}
+	$user = wp_get_current_user();
+	if ( ! in_array( 'fbg_member', (array) $user->roles, true ) ) {
+		return;
+	}
+	if ( current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	global $pagenow;
+	$allowed = array( 'admin-ajax.php', 'async-upload.php', 'media-upload.php' );
+	if ( isset( $pagenow ) && in_array( $pagenow, $allowed, true ) ) {
+		return;
+	}
+
+	wp_safe_redirect( home_url( '/dashboard/' ) );
+	exit;
+}
+add_action( 'admin_init', 'fbg_restrict_member_wp_admin', 0 );
+
+/**
+ * Hide the WordPress admin bar for members on the front end.
+ */
+function fbg_hide_admin_bar_for_members( $show ) {
+	if ( ! is_user_logged_in() ) {
+		return $show;
+	}
+	$user = wp_get_current_user();
+	if ( in_array( 'fbg_member', (array) $user->roles, true ) && ! current_user_can( 'manage_options' ) ) {
+		return false;
+	}
+	return $show;
+}
+add_filter( 'show_admin_bar', 'fbg_hide_admin_bar_for_members', 99 );
+
+/**
+ * After login, never send FBG members to wp-admin.
+ *
+ * @param string           $redirect_to URL.
+ * @param string           $request     Requested redirect.
+ * @param WP_User|WP_Error $user        User.
+ * @return string
+ */
+function fbg_member_login_redirect( $redirect_to, $request, $user ) {
+	if ( is_wp_error( $user ) || ! $user instanceof WP_User ) {
+		return $redirect_to;
+	}
+	if ( in_array( 'fbg_member', (array) $user->roles, true ) && ! user_can( $user, 'manage_options' ) ) {
+		if ( false !== strpos( (string) $redirect_to, 'wp-admin' ) ) {
+			return home_url( '/dashboard/' );
+		}
+	}
+	return $redirect_to;
+}
+add_filter( 'login_redirect', 'fbg_member_login_redirect', 10, 3 );

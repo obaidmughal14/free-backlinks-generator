@@ -142,7 +142,9 @@ function fbg_handle_post_submission() {
 		wp_send_json_error( array( 'message' => __( 'Please log in.', 'free-backlinks-generator' ) ) );
 	}
 
-	$user_id = get_current_user_id();
+	$user_id  = get_current_user_id();
+	$is_draft = isset( $_POST['status'] ) && 'draft' === sanitize_text_field( wp_unslash( $_POST['status'] ) );
+
 	$title   = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
 	$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
 	$niche   = isset( $_POST['niche'] ) ? sanitize_text_field( wp_unslash( $_POST['niche'] ) ) : '';
@@ -163,29 +165,53 @@ function fbg_handle_post_submission() {
 		}
 		$anchor = isset( $link['anchor'] ) ? sanitize_text_field( $link['anchor'] ) : '';
 		$url    = isset( $link['url'] ) ? esc_url_raw( $link['url'] ) : '';
-		if ( $anchor && $url && filter_var( $url, FILTER_VALIDATE_URL ) ) {
+		if ( $anchor && $url && filter_var( $url, FILTER_VALIDATE_URL ) && preg_match( '#^https?://#i', $url ) ) {
 			$links[] = array( 'anchor' => $anchor, 'url' => $url );
 			++$i;
 		}
 	}
 
-	$is_draft = isset( $_POST['status'] ) && 'draft' === sanitize_text_field( wp_unslash( $_POST['status'] ) );
-
-	$word_count = str_word_count( wp_strip_all_tags( $content ) );
-	if ( ! $is_draft && $word_count < 600 ) {
-		wp_send_json_error(
-			array(
-				'message' => sprintf(
-					/* translators: %d word count */
-					__( 'Post must be at least 600 words. Current: %d', 'free-backlinks-generator' ),
-					$word_count
-				),
-			)
-		);
+	if ( '' === trim( $title ) ) {
+		wp_send_json_error( array( 'message' => __( 'Please enter a post title.', 'free-backlinks-generator' ) ) );
+	}
+	if ( '' === $niche || ! term_exists( $niche, 'fbg_niche' ) ) {
+		wp_send_json_error( array( 'message' => __( 'Please select a valid niche / category.', 'free-backlinks-generator' ) ) );
+	}
+	if ( '' === $type || ! term_exists( $type, 'fbg_content_type' ) ) {
+		wp_send_json_error( array( 'message' => __( 'Please select a valid content type.', 'free-backlinks-generator' ) ) );
 	}
 
-	if ( empty( $title ) || empty( $niche ) || empty( $type ) ) {
-		wp_send_json_error( array( 'message' => __( 'Please fill all required fields.', 'free-backlinks-generator' ) ) );
+	$thumb = isset( $_POST['featured_image_id'] ) ? absint( $_POST['featured_image_id'] ) : 0;
+
+	if ( ! $is_draft ) {
+		$word_count = fbg_count_words_html( $content );
+		if ( $word_count < 600 ) {
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: %d: current word count */
+						__( 'Your post must be at least 600 words before you can submit for review. Current length: %d words.', 'free-backlinks-generator' ),
+						$word_count
+					),
+				)
+			);
+		}
+		if ( strlen( trim( $excerpt ) ) < 40 ) {
+			wp_send_json_error( array( 'message' => __( 'Please write a meta description / excerpt of at least 40 characters (max 160).', 'free-backlinks-generator' ) ) );
+		}
+		if ( empty( $links ) ) {
+			wp_send_json_error( array( 'message' => __( 'Add at least one backlink with anchor text and a full URL (https://…).', 'free-backlinks-generator' ) ) );
+		}
+		if ( ! $thumb ) {
+			wp_send_json_error( array( 'message' => __( 'Please select a featured image before submitting for review.', 'free-backlinks-generator' ) ) );
+		}
+		$att = get_post( $thumb );
+		if ( ! $att || 'attachment' !== $att->post_type || ! str_starts_with( (string) $att->post_mime_type, 'image/' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Featured image must be a valid image file (JPG, PNG, or WebP).', 'free-backlinks-generator' ) ) );
+		}
+		if ( (int) $att->post_author !== $user_id && ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You can only use images uploaded while logged in as your account.', 'free-backlinks-generator' ) ) );
+		}
 	}
 
 	$post_status = $is_draft ? 'draft' : 'pending';
@@ -213,11 +239,6 @@ function fbg_handle_post_submission() {
 	wp_set_object_terms( $post_id, array( $niche ), 'fbg_niche', false );
 	wp_set_object_terms( $post_id, array( $type ), 'fbg_content_type', false );
 
-	$thumb = isset( $_POST['featured_image_id'] ) ? absint( $_POST['featured_image_id'] ) : 0;
-	if ( ! $is_draft && ! $thumb ) {
-		wp_delete_post( $post_id, true );
-		wp_send_json_error( array( 'message' => __( 'Please select a featured image.', 'free-backlinks-generator' ) ) );
-	}
 	if ( $thumb && get_post( $thumb ) ) {
 		set_post_thumbnail( $post_id, $thumb );
 	}
@@ -228,7 +249,8 @@ function fbg_handle_post_submission() {
 			$user_id,
 			'post_submitted',
 			sprintf(
-				__( 'Your guest post "%s" has been submitted and is under review.', 'free-backlinks-generator' ),
+				/* translators: %s post title */
+				__( 'Your guest post "%s" has been submitted and is waiting for administrator approval.', 'free-backlinks-generator' ),
 				$title
 			),
 			$post_id

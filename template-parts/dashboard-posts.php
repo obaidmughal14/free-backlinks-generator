@@ -59,18 +59,27 @@ $posts   = get_posts(
 							$filter_st = 'pending';
 						} elseif ( 'rejected' === $st ) {
 							$filter_st = 'rejected';
+						} elseif ( 'draft' === $p->post_status ) {
+							$filter_st = 'draft';
 						} else {
 							$filter_st = 'pending';
 						}
 						$terms = get_the_terms( $p->ID, 'fbg_niche' );
 						$niche = ( $terms && ! is_wp_error( $terms ) ) ? $terms[0]->name : '';
-						$reason = get_post_meta( $p->ID, '_fbg_reject_reason', true );
+						$reason = get_post_meta( $p->ID, '_fbg_rejection_reason', true );
+						$status_label = array(
+							'approved' => __( 'Live', 'free-backlinks-generator' ),
+							'pending'  => __( 'Pending review', 'free-backlinks-generator' ),
+							'rejected' => __( 'Needs revision', 'free-backlinks-generator' ),
+							'draft'    => __( 'Draft', 'free-backlinks-generator' ),
+						);
+						$st_label = isset( $status_label[ $filter_st ] ) ? $status_label[ $filter_st ] : $filter_st;
 						?>
 						<tr data-status="<?php echo esc_attr( $filter_st ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>">
 							<td><input type="checkbox" name="ids[]" value="<?php echo esc_attr( (string) $p->ID ); ?>"></td>
 							<td><a href="<?php echo esc_url( get_permalink( $p ) ); ?>"><?php echo esc_html( $p->post_title ); ?></a></td>
 							<td><?php echo esc_html( $niche ); ?></td>
-							<td><?php echo esc_html( $filter_st ); ?></td>
+							<td><?php echo esc_html( $st_label ); ?></td>
 							<td><?php echo esc_html( (string) (int) get_post_meta( $p->ID, '_fbg_backlink_count', true ) ); ?></td>
 							<td><?php echo 'publish' === $p->post_status ? esc_html( number_format_i18n( (int) get_post_meta( $p->ID, '_fbg_view_count', true ) ) ) : '—'; ?></td>
 							<td><?php echo esc_html( get_the_date( '', $p ) ); ?></td>

@@ -5,7 +5,7 @@
  * @package Free_Backlinks_Generator
  */
 
-if ( ! is_page_template( 'page-templates/page-signup.php' ) && ! is_page_template( 'page-templates/page-login.php' ) && ! is_page_template( 'page-templates/page-forgot-password.php' ) && ! is_page_template( 'page-templates/page-dashboard.php' ) && ! is_page_template( 'page-templates/page-submit-post.php' ) ) {
+if ( ! is_page_template( 'page-templates/page-signup.php' ) && ! is_page_template( 'page-templates/page-login.php' ) && ! is_page_template( 'page-templates/page-forgot-password.php' ) && ! is_page_template( 'page-templates/page-dashboard.php' ) ) {
 	?>
 	<footer class="fbg-footer" role="contentinfo">
 		<div class="fbg-container fbg-footer__grid">

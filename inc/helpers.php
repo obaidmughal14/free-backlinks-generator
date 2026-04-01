@@ -281,6 +281,96 @@ function fbg_username_from_email( $email ) {
 }
 
 /**
+ * Count words in HTML content (UTF-8 friendly).
+ *
+ * @param string $html HTML or text.
+ * @return int
+ */
+function fbg_count_words_html( $html ) {
+	$text = wp_strip_all_tags( (string) $html );
+	$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	$text = preg_replace( '/[\p{Z}\s]+/u', ' ', $text );
+	$text = trim( $text );
+	if ( '' === $text ) {
+		return 0;
+	}
+	$parts = preg_split( '/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY );
+	return is_array( $parts ) ? count( $parts ) : 0;
+}
+
+/**
+ * Whether user opted in for a notification email (default on).
+ *
+ * @param int    $user_id User ID.
+ * @param string $key     Meta suffix: email_approved, email_rejected, etc.
+ * @return bool
+ */
+function fbg_user_wants_email( $user_id, $key ) {
+	$v = get_user_meta( (int) $user_id, '_fbg_pref_' . sanitize_key( $key ), true );
+	return '0' !== $v;
+}
+
+/**
+ * Wrap inner HTML in a branded email layout.
+ *
+ * @param string      $preheader Short preview line (hidden in inbox preview area).
+ * @param string      $heading   Main headline.
+ * @param string      $body_html Inner HTML (paragraphs, lists).
+ * @param string      $btn_label Optional CTA label.
+ * @param string      $btn_url   Optional CTA URL.
+ * @param string|null $footer_note Optional line above site name.
+ * @return string
+ */
+function fbg_email_html_layout( $preheader, $heading, $body_html, $btn_label = '', $btn_url = '', $footer_note = null ) {
+	$blog   = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+	$home   = esc_url( home_url( '/' ) );
+	$year   = gmdate( 'Y' );
+	$pre    = esc_html( $preheader );
+	$h      = esc_html( $heading );
+	$btn_l  = esc_html( $btn_label );
+	$btn_u  = esc_url( $btn_url );
+	$note   = null !== $footer_note ? '<p style="margin:16px 0 0;font-size:13px;color:#64748b;">' . esc_html( $footer_note ) . '</p>' : '';
+
+	$button_block = '';
+	if ( $btn_label && $btn_url ) {
+		$button_block = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:28px 0 8px;"><tr><td style="border-radius:10px;background:linear-gradient(135deg,#0d9488 0%,#6366f1 100%);"><a href="' . $btn_u . '" style="display:inline-block;padding:14px 28px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">' . $btn_l . '</a></td></tr></table>';
+	}
+
+	return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>' . esc_html( $blog ) . '</title></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;">' . $pre . '</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(15,23,42,0.08);">
+        <tr><td style="padding:28px 32px 20px;background:linear-gradient(135deg,#0f766e 0%,#312e81 100%);text-align:center;">
+          <p style="margin:0;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.75);">' . esc_html( $blog ) . '</p>
+          <h1 style="margin:12px 0 0;font-size:22px;line-height:1.35;color:#ffffff;font-weight:800;">' . $h . '</h1>
+        </td></tr>
+        <tr><td style="padding:32px 32px 36px;color:#334155;font-size:16px;line-height:1.65;">
+          ' . $body_html . '
+          ' . $button_block . '
+          ' . $note . '
+          <p style="margin:28px 0 0;padding-top:24px;border-top:1px solid #e2e8f0;font-size:13px;color:#94a3b8;">&copy; ' . esc_html( $year ) . ' ' . esc_html( $blog ) . ' &middot; <a href="' . $home . '" style="color:#0d9488;">' . esc_html( $home ) . '</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>';
+}
+
+/**
+ * Send HTML email with consistent headers.
+ *
+ * @param string|array<string> $to      Email(s).
+ * @param string               $subject Subject line.
+ * @param string               $html    HTML body.
+ * @return bool
+ */
+function fbg_wp_mail_html( $to, $subject, $html ) {
+	$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+	return wp_mail( $to, $subject, $html, $headers );
+}
+
+/**
  * Send welcome email.
  *
  * @param int    $user_id User ID.
@@ -295,18 +385,29 @@ function fbg_send_welcome_email( $user_id, $name, $email ) {
 		$blogname,
 		$name
 	);
-	$submit   = esc_url( home_url( '/submit-post/' ) );
-	$community = esc_url( home_url( '/community/' ) );
-	$profile  = esc_url( home_url( '/dashboard/#profile' ) );
-	$body     = sprintf(
-		"Hi %s,\n\nYou're officially a link builder now. Welcome to the community!\n\n→ Submit Your First Guest Post\n%s\n\n→ Browse the Community\n%s\n\n→ Complete Your Profile\n%s\n\nYour current tier: Seedling\n\n— %s\n",
-		$name,
+	$submit    = home_url( '/submit-post/' );
+	$community = home_url( '/community/' );
+	$profile   = home_url( '/dashboard/#profile' );
+	$body      = fbg_email_html_layout(
+		__( 'You are in — start building backlinks.', 'free-backlinks-generator' ),
+		__( 'You are officially part of the community', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 16px;">' . sprintf(
+			/* translators: %s first name */
+			esc_html__( 'Hi %s,', 'free-backlinks-generator' ),
+			esc_html( $name )
+		) . '</p>'
+		. '<p style="margin:0 0 16px;">' . esc_html__( 'You can now submit guest posts, earn backlinks, and grow with other creators. Here is how to get started:', 'free-backlinks-generator' ) . '</p>'
+		. '<ul style="margin:0;padding-left:20px;color:#475569;">'
+		. '<li style="margin:8px 0;">' . esc_html__( 'Write your first guest post with contextual links to your site.', 'free-backlinks-generator' ) . '</li>'
+		. '<li style="margin:8px 0;">' . esc_html__( 'Browse published posts in the community for inspiration.', 'free-backlinks-generator' ) . '</li>'
+		. '<li style="margin:8px 0;">' . esc_html__( 'Complete your profile so other members can discover you.', 'free-backlinks-generator' ) . '</li>'
+		. '</ul>'
+		. '<p style="margin:20px 0 0;font-size:14px;color:#64748b;">' . esc_html__( 'Your starting tier: Seedling — keep publishing to level up.', 'free-backlinks-generator' ) . '</p>',
+		__( 'Submit your first post', 'free-backlinks-generator' ),
 		$submit,
-		$community,
-		$profile,
-		$blogname
+		null
 	);
-	wp_mail( $email, $subject, $body );
+	fbg_wp_mail_html( $email, $subject, $body );
 }
 
 /**
@@ -321,17 +422,21 @@ function fbg_notify_admin_new_submission( $post_id, $user_id, $title ) {
 	if ( ! is_email( $admin ) ) {
 		return;
 	}
-	$edit = admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' );
-	wp_mail(
-		$admin,
-		sprintf( __( '[%s] New guest post pending', 'free-backlinks-generator' ), get_bloginfo( 'name' ) ),
-		sprintf(
-			"A new guest post is pending review.\n\nTitle: %s\nAuthor user ID: %d\nEdit: %s\n",
-			$title,
-			$user_id,
-			$edit
-		)
+	$edit   = admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' );
+	$author = get_userdata( $user_id );
+	$aname  = $author ? $author->display_name : '#' . $user_id;
+	$subj   = sprintf( __( '[%s] New guest post pending review', 'free-backlinks-generator' ), get_bloginfo( 'name' ) );
+	$html   = fbg_email_html_layout(
+		__( 'A new submission is waiting in wp-admin.', 'free-backlinks-generator' ),
+		__( 'New guest post to review', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 12px;"><strong>' . esc_html__( 'Title', 'free-backlinks-generator' ) . ':</strong> ' . esc_html( $title ) . '</p>'
+		. '<p style="margin:0 0 12px;"><strong>' . esc_html__( 'Author', 'free-backlinks-generator' ) . ':</strong> ' . esc_html( $aname ) . ' (ID ' . (int) $user_id . ')</p>'
+		. '<p style="margin:0;">' . esc_html__( 'Review the post, then publish to approve or save as Draft and use the rejection box to notify the author.', 'free-backlinks-generator' ) . '</p>',
+		__( 'Open in WordPress', 'free-backlinks-generator' ),
+		$edit,
+		null
 	);
+	fbg_wp_mail_html( $admin, $subj, $html );
 }
 
 /**
@@ -345,19 +450,30 @@ function fbg_send_approval_email( $user_id, $post ) {
 	if ( ! $user ) {
 		return;
 	}
+	if ( ! fbg_user_wants_email( $user_id, 'email_approved' ) ) {
+		return;
+	}
 	$link = get_permalink( $post );
-	wp_mail(
-		$user->user_email,
-		sprintf(
-			__( 'Your guest post "%s" is live', 'free-backlinks-generator' ),
-			$post->post_title
-		),
-		sprintf(
-			"Hi %s,\n\nYour post has been approved and published.\n\nView it: %s\n",
-			$user->display_name,
-			$link
-		)
+	$subj = sprintf(
+		/* translators: %s post title */
+		__( 'Approved: your guest post "%s" is live', 'free-backlinks-generator' ),
+		$post->post_title
 	);
+	$html = fbg_email_html_layout(
+		__( 'Great news — your post is published.', 'free-backlinks-generator' ),
+		__( 'Your guest post was approved', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 16px;">' . sprintf(
+			/* translators: %s display name */
+			esc_html__( 'Hi %s,', 'free-backlinks-generator' ),
+			esc_html( $user->display_name )
+		) . '</p>'
+		. '<p style="margin:0 0 16px;">' . esc_html__( 'Your submission passed review and is now live on the site. Thank you for contributing quality content to the community.', 'free-backlinks-generator' ) . '</p>'
+		. '<p style="margin:0;font-size:15px;"><strong>' . esc_html( $post->post_title ) . '</strong></p>',
+		__( 'View your live post', 'free-backlinks-generator' ),
+		$link,
+		__( 'You will also see this update in your dashboard notifications.', 'free-backlinks-generator' )
+	);
+	fbg_wp_mail_html( $user->user_email, $subj, $html );
 }
 
 /**
@@ -372,15 +488,33 @@ function fbg_send_rejection_email( $user_id, $title, $reason ) {
 	if ( ! $user ) {
 		return;
 	}
-	wp_mail(
-		$user->user_email,
-		sprintf( __( 'Update on your guest post: %s', 'free-backlinks-generator' ), $title ),
-		sprintf(
-			"Hi %s,\n\nYour submission needs revision.\n\nNote from reviewer:\n%s\n\nYou can revise and resubmit from your dashboard.\n",
-			$user->display_name,
-			$reason
-		)
+	if ( ! fbg_user_wants_email( $user_id, 'email_rejected' ) ) {
+		return;
+	}
+	$dash = home_url( '/dashboard/#posts' );
+	$subj = sprintf(
+		/* translators: %s post title */
+		__( 'Update on your guest post: %s', 'free-backlinks-generator' ),
+		$title
 	);
+	$reason_html = '<div style="margin:16px 0;padding:16px 18px;background:#fff7ed;border-left:4px solid #ea580c;border-radius:0 8px 8px 0;font-size:15px;color:#9a3412;">' . esc_html( wp_strip_all_tags( $reason ) ) . '</div>';
+	$html        = fbg_email_html_layout(
+		__( 'Your submission needs a few changes.', 'free-backlinks-generator' ),
+		__( 'Your guest post was not approved (yet)', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 16px;">' . sprintf(
+			/* translators: %s display name */
+			esc_html__( 'Hi %s,', 'free-backlinks-generator' ),
+			esc_html( $user->display_name )
+		) . '</p>'
+		. '<p style="margin:0 0 12px;">' . esc_html__( 'Our team reviewed your submission and could not publish it in its current form. Please read the note below, revise your article, and submit again when you are ready.', 'free-backlinks-generator' ) . '</p>'
+		. '<p style="margin:0 0 8px;font-weight:700;color:#0f172a;">' . esc_html__( 'Note from the reviewer', 'free-backlinks-generator' ) . '</p>'
+		. $reason_html
+		. '<p style="margin:20px 0 0;">' . esc_html__( 'Your draft is saved — open your dashboard to edit and resubmit.', 'free-backlinks-generator' ) . '</p>',
+		__( 'Go to my posts', 'free-backlinks-generator' ),
+		$dash,
+		__( 'This message is also shown in your dashboard notifications.', 'free-backlinks-generator' )
+	);
+	fbg_wp_mail_html( $user->user_email, $subj, $html );
 }
 
 /**

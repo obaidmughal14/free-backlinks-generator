@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.0.0' );
+define( 'FBG_VERSION', '1.0.3' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -109,9 +109,14 @@ function fbg_enqueue_assets() {
 			'fbg-submit',
 			'fbgSubmit',
 			array(
-				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-				'nonce'     => wp_create_nonce( 'fbg_submit_nonce' ),
-				'maxLinks'  => is_user_logged_in() ? fbg_get_user_link_limit( get_current_user_id() ) : 3,
+				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( 'fbg_submit_nonce' ),
+				'maxLinks'     => is_user_logged_in() ? fbg_get_user_link_limit( get_current_user_id() ) : 3,
+				'anchorPh'     => __( 'Anchor text', 'free-backlinks-generator' ),
+				'genericError' => __( 'We could not save your post. Please check the form and try again.', 'free-backlinks-generator' ),
+				'parseError'   => __( 'The server returned an unexpected response. Try refreshing the page or logging in again.', 'free-backlinks-generator' ),
+				'networkError' => __( 'Network error. Check your connection and try again.', 'free-backlinks-generator' ),
+				'mediaError'   => __( 'The media library did not load. Refresh the page. If the problem continues, your account may need upload permission.', 'free-backlinks-generator' ),
 			)
 		);
 	}
@@ -159,6 +164,9 @@ function fbg_body_class( $classes ) {
 	}
 	if ( is_page_template( array( 'page-templates/page-dashboard.php', 'page-templates/page-submit-post.php' ) ) ) {
 		$classes[] = 'fbg-dash-page';
+	}
+	if ( is_page_template( 'page-templates/page-submit-post.php' ) ) {
+		$classes[] = 'fbg-submit-page';
 	}
 	return $classes;
 }

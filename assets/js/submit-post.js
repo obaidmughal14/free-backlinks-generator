@@ -8,6 +8,8 @@
 	var addBtn = document.getElementById('fbg-add-link');
 	var form = document.getElementById('fbg-submit-form');
 	var alertEl = document.getElementById('fbg-submit-alert');
+	var mainEl = document.getElementById('main-content');
+	var lastSubmitMode = 'submit';
 
 	function rowHtml(i) {
 		return (
@@ -16,11 +18,13 @@
 			'">' +
 			'<input type="text" name="backlinks[' +
 			i +
-			'][anchor]" placeholder="Anchor">' +
+			'][anchor]" placeholder="' +
+			( fbgSubmit.anchorPh || 'Anchor text' ) +
+			'">' +
 			'<input type="url" name="backlinks[' +
 			i +
 			'][url]" placeholder="https://">' +
-			'<button type="button" class="fbg-remove-row">✕</button>' +
+			'<button type="button" class="fbg-remove-row" aria-label="Remove">✕</button>' +
 			'</div>'
 		);
 	}
@@ -34,9 +38,19 @@
 	addBtn.addEventListener('click', addRow);
 	rows.addEventListener('click', function (e) {
 		if (e.target.classList.contains('fbg-remove-row')) {
-			e.target.closest('.fbg-link-row').remove();
+			var row = e.target.closest('.fbg-link-row');
+			if (row) row.remove();
 		}
 	});
+
+	document.getElementById('fbg-save-draft') &&
+		document.getElementById('fbg-save-draft').addEventListener('click', function () {
+			lastSubmitMode = 'draft';
+		});
+	document.getElementById('fbg-submit-review') &&
+		document.getElementById('fbg-submit-review').addEventListener('click', function () {
+			lastSubmitMode = 'submit';
+		});
 
 	var title = document.getElementById('fbg-post-title');
 	var tp = document.getElementById('fbg-title-preview');
@@ -65,8 +79,9 @@
 	function wordCount(html) {
 		var div = document.createElement('div');
 		div.innerHTML = html;
-		var text = div.textContent || '';
-		return text.trim().split(/\s+/).filter(Boolean).length;
+		var text = (div.textContent || '').replace(/\s+/g, ' ').trim();
+		if (!text) return 0;
+		return text.split(/\s+/).filter(Boolean).length;
 	}
 
 	var wcEl = document.getElementById('fbg-word-count');
@@ -93,37 +108,104 @@
 	if (featBtn && typeof wp !== 'undefined' && wp.media) {
 		featBtn.addEventListener('click', function (e) {
 			e.preventDefault();
-			var frame = wp.media({ title: 'Featured image', multiple: false });
+			var frame = wp.media({ title: 'Featured image', multiple: false, library: { type: 'image' } });
 			frame.on('select', function () {
 				var att = frame.state().get('selection').first().toJSON();
 				featId.value = att.id;
-				featPrev.innerHTML = '<img src="' + att.url + '" alt="" style="max-width:200px">';
+				featPrev.innerHTML =
+					'<img src="' + att.url.replace(/"/g, '&quot;') + '" alt="" style="max-width:220px;height:auto;border-radius:8px">';
 			});
 			frame.open();
 		});
+	} else if (featBtn) {
+		featBtn.addEventListener('click', function () {
+			if (alertEl) {
+				alertEl.textContent =
+					fbgSubmit.mediaError ||
+					'Media library could not load. Refresh the page or contact support.';
+				alertEl.hidden = false;
+			}
+		});
+	}
+
+	function showError(msg) {
+		if (!alertEl) {
+			window.alert(msg);
+			return;
+		}
+		alertEl.textContent = msg;
+		alertEl.hidden = false;
+		alertEl.focus();
+	}
+
+	function setLoading(loading) {
+		if (mainEl) mainEl.classList.toggle('is-loading', loading);
+		var btns = form ? form.querySelectorAll('button[type="submit"]') : [];
+		for (var b = 0; b < btns.length; b++) {
+			btns[b].disabled = loading;
+		}
+	}
+
+	function parseJsonMessage(data) {
+		if (!data) return fbgSubmit.genericError || 'Something went wrong. Please try again.';
+		if (typeof data === 'string') return data;
+		if (data.message) return data.message;
+		return fbgSubmit.genericError || 'Something went wrong. Please try again.';
 	}
 
 	form.addEventListener('submit', function (e) {
 		e.preventDefault();
-		alertEl.hidden = true;
-		var submitter = e.submitter;
-		var isDraft = submitter && submitter.getAttribute('value') === 'draft';
+		if (alertEl) alertEl.hidden = true;
+
+		var isDraft = false;
+		if (typeof e.submitter !== 'undefined' && e.submitter) {
+			isDraft = e.submitter.getAttribute('value') === 'draft';
+		} else {
+			isDraft = lastSubmitMode === 'draft';
+		}
+
 		var fd = new FormData(form);
 		fd.append('action', 'fbg_submit_post');
 		fd.append('nonce', fbgSubmit.nonce);
 		fd.set('content', getEditorContent());
 		fd.append('status', isDraft ? 'draft' : 'submit');
+
+		setLoading(true);
+
 		fetch(fbgSubmit.ajaxUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
 			.then(function (r) {
-				return r.json();
+				return r.text().then(function (text) {
+					var json = null;
+					try {
+						json = text ? JSON.parse(text) : null;
+					} catch (err) {
+						throw new Error(
+							fbgSubmit.parseError ||
+								'The server returned an unexpected response. If you are logged out, log in and try again.'
+						);
+					}
+					if (!r.ok) {
+						throw new Error(parseJsonMessage(json && json.data));
+					}
+					return json;
+				});
 			})
 			.then(function (json) {
-				if (json.success && json.data.redirect) {
-					window.location = json.data.redirect;
-				} else if (json.data && json.data.message) {
-					alertEl.textContent = json.data.message;
-					alertEl.hidden = false;
+				if (json && json.success && json.data && json.data.redirect) {
+					window.location.href = json.data.redirect;
+					return;
 				}
+				if (json && json.success === false) {
+					showError(parseJsonMessage(json.data));
+					return;
+				}
+				showError(fbgSubmit.genericError || 'Could not save your post.');
+			})
+			.catch(function (err) {
+				showError(err.message || (fbgSubmit.networkError || 'Network error. Check your connection and try again.'));
+			})
+			.finally(function () {
+				setLoading(false);
 			});
 	});
 })();
