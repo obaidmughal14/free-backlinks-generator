@@ -1,0 +1,14 @@
+---
+description: Keep README.md and version constants aligned after theme changes
+alwaysApply: true
+---
+
+# README and version hygiene (Free Backlinks Generator)
+
+When you finish **substantive** work on this theme (new features, admin UI, member flows, enqueues, slugs, or notable CSS/JS behavior):
+
+1. Bump **`Version`** in `style.css` and **`FBG_VERSION`** in `functions.php` when the change is release-worthy.
+2. Update **`README.md`**: the **Current version** line, feature bullets, URL/admin tables, and **Important files** if paths or roles changed.
+3. Optionally add an entry to **`CHANGELOG.md`**.
+
+Do not let README drift from the actual theme behavior after a meaningful change.
