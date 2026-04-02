@@ -14,8 +14,13 @@
 				<?php esc_html_e( 'Free Backlinks Generator is the community where bloggers and SEO professionals publish original guest posts with their backlinks — and help each other rank higher. No payments. No private blog networks. Just real content, real links, real results.', 'free-backlinks-generator' ); ?>
 			</p>
 			<div class="fbg-hero__ctas">
-				<a class="btn-primary" href="<?php echo esc_url( home_url( '/register/' ) ); ?>"><?php esc_html_e( 'Get My Free Backlinks', 'free-backlinks-generator' ); ?> →</a>
-				<a class="btn-ghost btn-ghost--on-dark" href="#how-it-works"><?php esc_html_e( 'See How It Works', 'free-backlinks-generator' ); ?> ↓</a>
+				<?php if ( is_user_logged_in() ) : ?>
+					<a class="btn-primary" href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>"><?php esc_html_e( 'Open Dashboard', 'free-backlinks-generator' ); ?> →</a>
+					<a class="btn-ghost btn-ghost--on-dark" href="<?php echo esc_url( get_post_type_archive_link( 'fbg_post' ) ); ?>"><?php esc_html_e( 'Browse community posts', 'free-backlinks-generator' ); ?></a>
+				<?php else : ?>
+					<a class="btn-primary" href="<?php echo esc_url( home_url( '/register/' ) ); ?>"><?php esc_html_e( 'Get My Free Backlinks', 'free-backlinks-generator' ); ?> →</a>
+					<a class="btn-ghost btn-ghost--on-dark" href="#how-it-works"><?php esc_html_e( 'See How It Works', 'free-backlinks-generator' ); ?> ↓</a>
+				<?php endif; ?>
 			</div>
 			<ul class="fbg-hero__proof">
 				<li><?php esc_html_e( 'Free to join', 'free-backlinks-generator' ); ?></li>

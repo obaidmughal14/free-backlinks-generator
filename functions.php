@@ -9,17 +9,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.0.7' );
+define( 'FBG_VERSION', '1.1.1' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
 require_once FBG_DIR . '/inc/helpers.php';
+require_once FBG_DIR . '/inc/reading-affiliate.php';
 require_once FBG_DIR . '/inc/custom-post-types.php';
 require_once FBG_DIR . '/inc/user-roles.php';
 require_once FBG_DIR . '/inc/security.php';
 require_once FBG_DIR . '/inc/seo.php';
 require_once FBG_DIR . '/inc/ajax-handlers.php';
 require_once FBG_DIR . '/inc/sidebar-ads.php';
+if ( is_admin() ) {
+	require_once FBG_DIR . '/inc/admin-affiliates.php';
+}
 
 /**
  * Theme setup.
@@ -142,6 +146,32 @@ function fbg_enqueue_assets() {
 				),
 			)
 		);
+
+		if ( is_user_logged_in() && function_exists( 'fbg_get_user_completed_peer_reads' ) ) {
+			$read_pid = get_queried_object_id();
+			$read_uid = get_current_user_id();
+			if ( $read_pid && (int) get_post_field( 'post_author', $read_pid ) !== $read_uid ) {
+				$read_done = in_array( $read_pid, fbg_get_user_completed_peer_reads( $read_uid ), true );
+				if ( ! $read_done ) {
+					wp_enqueue_script( 'fbg-reading', FBG_URI . '/assets/js/reading-tracker.js', array(), FBG_VERSION, true );
+					wp_localize_script(
+						'fbg-reading',
+						'fbgReading',
+						array(
+							'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+							'nonce'           => wp_create_nonce( 'fbg_read_progress' ),
+							'postId'          => $read_pid,
+							'intervalMs'      => 25000,
+							'requiredSeconds' => (int) FBG_READ_SECONDS_REQUIRED,
+							'strings'         => array(
+								'progress' => __( 'Stay on this tab — about %d min of reading left to unlock credit for this post.', 'free-backlinks-generator' ),
+								'done'     => __( 'This post counts toward your next guest-post slot. Thanks for reading!', 'free-backlinks-generator' ),
+							),
+						)
+					);
+				}
+			}
+		}
 	}
 
 	if (
@@ -172,6 +202,29 @@ function fbg_enqueue_assets() {
 			)
 		);
 	}
+
+	$resp_deps = array( 'fbg-main' );
+	if ( is_page_template( 'page-templates/page-signup.php' ) || is_page_template( 'page-templates/page-login.php' ) || is_page_template( 'page-templates/page-forgot-password.php' ) ) {
+		$resp_deps[] = 'fbg-auth';
+	}
+	if ( is_page_template( 'page-templates/page-dashboard.php' ) || is_page_template( 'page-templates/page-submit-post.php' ) ) {
+		$resp_deps[] = 'fbg-dashboard';
+	}
+	if ( is_post_type_archive( 'fbg_post' ) || is_home() || is_singular( 'fbg_post' ) ) {
+		$resp_deps[] = 'fbg-blog';
+	}
+	if (
+		is_page_template(
+			array(
+				'page-templates/page-affiliate-program.php',
+				'page-templates/page-cookie-policy.php',
+				'page-templates/page-gdpr-notice.php',
+			)
+		)
+	) {
+		$resp_deps[] = 'fbg-marketing';
+	}
+	wp_enqueue_style( 'fbg-responsive', FBG_URI . '/assets/css/fbg-responsive.css', $resp_deps, FBG_VERSION );
 
 	wp_enqueue_script( 'fbg-main', FBG_URI . '/assets/js/main.js', array(), FBG_VERSION, true );
 	wp_localize_script(

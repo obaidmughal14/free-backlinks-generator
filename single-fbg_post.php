@@ -56,6 +56,47 @@ while ( have_posts() ) :
 					?>
 					· 🔗 <?php echo esc_html( (string) $link_count ); ?> <?php esc_html_e( 'backlinks in this post', 'free-backlinks-generator' ); ?>
 				</p>
+				<?php
+				if ( is_user_logged_in() && function_exists( 'fbg_get_user_completed_peer_reads' ) ) {
+					$viewer_id  = get_current_user_id();
+					$author_id  = (int) get_the_author_meta( 'ID' );
+					$current_id = (int) get_the_ID();
+					if ( $viewer_id !== $author_id ) {
+						$peer_done = in_array( $current_id, fbg_get_user_completed_peer_reads( $viewer_id ), true );
+						if ( $peer_done ) {
+							echo '<p class="fbg-read-tracker fbg-read-tracker--complete">' . esc_html__( 'You have already earned reader credit for this post toward extra guest-post slots.', 'free-backlinks-generator' ) . '</p>';
+						} else {
+							$prog     = get_user_meta( $viewer_id, '_fbg_read_progress', true );
+							$init_sec = ( is_array( $prog ) && isset( $prog[ (string) $current_id ] ) ) ? (int) $prog[ (string) $current_id ] : 0;
+							$req      = (int) FBG_READ_SECONDS_REQUIRED;
+							$pct      = $req > 0 ? min( 100, (int) round( ( $init_sec / $req ) * 100 ) ) : 0;
+							?>
+							<div id="fbg-read-tracker" class="fbg-read-tracker" data-completed="0" role="status" aria-live="polite">
+								<p class="fbg-read-tracker__title"><?php esc_html_e( 'Reader unlock', 'free-backlinks-generator' ); ?></p>
+								<p class="fbg-read-tracker__hint"><?php esc_html_e( 'Spend at least 2 minutes with this article in an active browser tab to earn credit. Every 2 different posts you complete unlock one more guest post you can submit.', 'free-backlinks-generator' ); ?></p>
+								<div class="fbg-read-tracker__track" aria-hidden="true">
+									<div class="fbg-read-tracker__bar" style="width: <?php echo esc_attr( (string) $pct ); ?>%;"></div>
+								</div>
+								<p class="fbg-read-tracker__label">
+									<?php
+									if ( $init_sec >= $req ) {
+										esc_html_e( 'This post counts toward your next guest-post slot. Thanks for reading!', 'free-backlinks-generator' );
+									} else {
+										$left = max( 1, (int) ceil( ( $req - $init_sec ) / 60 ) );
+										printf(
+											/* translators: %d: approximate minutes left */
+											esc_html__( 'Stay on this tab — about %d min of reading left to unlock credit for this post.', 'free-backlinks-generator' ),
+											$left
+										);
+									}
+									?>
+								</p>
+							</div>
+							<?php
+						}
+					}
+				}
+				?>
 			</div>
 		</div>
 		<div class="fbg-container fbg-single-layout">
@@ -111,7 +152,11 @@ while ( have_posts() ) :
 		<section class="fbg-cta-inline fbg-container">
 			<h3><?php esc_html_e( 'Want your backlinks featured here?', 'free-backlinks-generator' ); ?></h3>
 			<p><?php esc_html_e( 'Submit a guest post — it’s free.', 'free-backlinks-generator' ); ?></p>
-			<a class="btn-primary" href="<?php echo esc_url( home_url( '/register/' ) ); ?>"><?php esc_html_e( 'Join & Submit Your Post', 'free-backlinks-generator' ); ?> →</a>
+			<?php if ( is_user_logged_in() ) : ?>
+				<a class="btn-primary" href="<?php echo esc_url( home_url( '/submit-post/' ) ); ?>"><?php esc_html_e( 'Submit a guest post', 'free-backlinks-generator' ); ?> →</a>
+			<?php else : ?>
+				<a class="btn-primary" href="<?php echo esc_url( home_url( '/register/' ) ); ?>"><?php esc_html_e( 'Join & Submit Your Post', 'free-backlinks-generator' ); ?> →</a>
+			<?php endif; ?>
 		</section>
 	</main>
 	<?php

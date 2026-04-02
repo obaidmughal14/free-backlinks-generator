@@ -145,6 +145,14 @@ function fbg_handle_post_submission() {
 	$user_id  = get_current_user_id();
 	$is_draft = isset( $_POST['status'] ) && 'draft' === sanitize_text_field( wp_unslash( $_POST['status'] ) );
 
+	if ( function_exists( 'fbg_user_can_create_guest_post' ) && ! fbg_user_can_create_guest_post( $user_id ) ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'You have reached your guest-post limit. Read other members’ posts for at least 2 minutes each — every 2 posts you complete unlock one more slot — or earn bonus slots through the affiliate program.', 'free-backlinks-generator' ),
+			)
+		);
+	}
+
 	$title   = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
 	$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
 	$niche   = isset( $_POST['niche'] ) ? sanitize_text_field( wp_unslash( $_POST['niche'] ) ) : '';
@@ -730,7 +738,7 @@ function fbg_handle_affiliate_apply() {
 			$rows,
 			__( 'WordPress admin', 'free-backlinks-generator' ),
 			admin_url(),
-			__( 'Recent applications are stored in the option fbg_affiliate_leads (up to 100 entries).', 'free-backlinks-generator' )
+			__( 'Review applications under Affiliates in the WordPress admin.', 'free-backlinks-generator' )
 		);
 		fbg_wp_mail_html( $admin, $subj, $html );
 	}
@@ -781,7 +789,94 @@ function fbg_handle_sidebar_contact() {
 	$headers = array( 'Content-Type: text/plain; charset=UTF-8', 'Reply-To: ' . $mail );
 	wp_mail( $admin, $subj, $body, $headers );
 
+	if ( function_exists( 'fbg_get_affiliate_id_from_cookie' ) && function_exists( 'fbg_affiliate_add_engagement' ) ) {
+		$aff_id = fbg_get_affiliate_id_from_cookie();
+		if ( $aff_id > 0 && $aff_id !== get_current_user_id() ) {
+			$ckey = 'fbg_aff_contact_' . md5( $aff_id . '_' . $ip );
+			if ( ! get_transient( $ckey ) ) {
+				set_transient( $ckey, 1, DAY_IN_SECONDS );
+				fbg_affiliate_add_engagement( $aff_id, fbg_request_is_organic_referrer() );
+			}
+		}
+	}
+
 	wp_send_json_success();
 }
 add_action( 'wp_ajax_nopriv_fbg_sidebar_contact', 'fbg_handle_sidebar_contact' );
 add_action( 'wp_ajax_fbg_sidebar_contact', 'fbg_handle_sidebar_contact' );
+
+/**
+ * Log active reading time on single community posts (members only, not own posts).
+ */
+function fbg_handle_read_progress() {
+	check_ajax_referer( 'fbg_read_progress', 'nonce' );
+	if ( ! is_user_logged_in() ) {
+		wp_send_json_error( array( 'message' => __( 'Not logged in.', 'free-backlinks-generator' ) ) );
+	}
+
+	$user_id = get_current_user_id();
+	$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+	$claim   = isset( $_POST['active_seconds'] ) ? absint( $_POST['active_seconds'] ) : 0;
+	$claim   = min( 40, $claim );
+
+	if ( $post_id < 1 ) {
+		wp_send_json_error( array( 'message' => __( 'Invalid post.', 'free-backlinks-generator' ) ) );
+	}
+
+	$post = get_post( $post_id );
+	if ( ! $post || 'fbg_post' !== $post->post_type || 'publish' !== $post->post_status ) {
+		wp_send_json_error( array( 'message' => __( 'Invalid post.', 'free-backlinks-generator' ) ) );
+	}
+	if ( (int) $post->post_author === $user_id ) {
+		wp_send_json_success( array( 'seconds' => 0, 'required' => FBG_READ_SECONDS_REQUIRED, 'ignored' => true ) );
+	}
+
+	$throttle_key = 'fbg_readtick_' . $user_id . '_' . $post_id;
+	if ( get_transient( $throttle_key ) ) {
+		wp_send_json_success( array( 'seconds' => null, 'wait' => true ) );
+	}
+	set_transient( $throttle_key, 1, 22 );
+
+	$progress = get_user_meta( $user_id, '_fbg_read_progress', true );
+	if ( ! is_array( $progress ) ) {
+		$progress = array();
+	}
+	$pid_key   = (string) $post_id;
+	$so_far    = isset( $progress[ $pid_key ] ) ? (int) $progress[ $pid_key ] : 0;
+	$so_far   += $claim;
+	$so_far    = min( FBG_READ_SECONDS_REQUIRED, $so_far );
+	$progress[ $pid_key ] = $so_far;
+	update_user_meta( $user_id, '_fbg_read_progress', $progress );
+
+	$completed = get_user_meta( $user_id, '_fbg_read_completed', true );
+	if ( ! is_array( $completed ) ) {
+		$completed = array();
+	}
+	$completed = array_map( 'absint', $completed );
+
+	if ( $so_far >= FBG_READ_SECONDS_REQUIRED && ! in_array( $post_id, $completed, true ) ) {
+		$completed[] = $post_id;
+		update_user_meta( $user_id, '_fbg_read_completed', $completed );
+		unset( $progress[ $pid_key ] );
+		update_user_meta( $user_id, '_fbg_read_progress', $progress );
+
+		$n = count( $completed );
+		if ( function_exists( 'fbg_create_notification' ) && $n > 0 && 0 === ( $n % FBG_READS_PER_SLOT_PAIR ) ) {
+			fbg_create_notification(
+				$user_id,
+				'read_unlock',
+				__( 'You finished reading 2 more community posts — you unlocked an extra guest-post slot. Submit from your dashboard when you are ready.', 'free-backlinks-generator' ),
+				$post_id
+			);
+		}
+	}
+
+	wp_send_json_success(
+		array(
+			'seconds'   => $so_far,
+			'required'  => FBG_READ_SECONDS_REQUIRED,
+			'completed' => count( $completed ),
+		)
+	);
+}
+add_action( 'wp_ajax_fbg_read_progress', 'fbg_handle_read_progress' );

@@ -552,6 +552,13 @@ h3 {
 	border: 0;
 	font: inherit;
 }
+.fbg-cta-form--logged-in {
+	align-items: center;
+}
+.fbg-cta-form--logged-in .btn-ghost--on-dark {
+	border-color: rgba(255, 255, 255, 0.45);
+	color: #fff;
+}
 .fbg-cta-foot {
 	margin-top: var(--space-md);
 	opacity: 0.9;

@@ -1,0 +1,273 @@
+/**
+ * Responsive layer: phones, tablets, desktops, large / TV viewports.
+ * Loaded after theme bundles so these rules win when needed.
+ *
+ * @package Free_Backlinks_Generator
+ */
+
+/* —— Base: scaling & overflow —— */
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+:where(img, video, svg) {
+	max-width: 100%;
+	height: auto;
+}
+
+.fbg-prose :where(img, video),
+.fbg-single-content :where(img, video) {
+	max-width: 100%;
+	height: auto;
+}
+
+.fbg-prose :where(table),
+.fbg-single-content :where(table) {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.fbg-prose :where(pre),
+.fbg-single-content :where(pre),
+.mono,
+.backlink-url {
+	overflow-x: auto;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+/* —— Layout width: fluid gutters —— */
+.fbg-container {
+	width: min(1120px, 100% - clamp(1rem, 4vw, 2.5rem));
+}
+
+/* Sticky bar offset (main nav is not sticky) */
+.fbg-filter-bar {
+	top: 0;
+	padding-inline: clamp(var(--space-sm), 2vw, var(--space-md));
+}
+
+/* —— Touch targets —— */
+.nav-hamburger {
+	min-width: 2.75rem;
+	min-height: 2.75rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-sm);
+	box-sizing: border-box;
+}
+
+.fbg-nav-drawer__links a,
+.fbg-nav-drawer__actions .btn-primary,
+.fbg-nav-drawer__actions .btn-ghost,
+.fbg-nav-drawer__actions .btn-dark {
+	min-height: 2.75rem;
+	display: inline-flex;
+	align-items: center;
+}
+
+/* —— Single post hero —— */
+.fbg-single-hero {
+	min-height: 0;
+}
+
+.fbg-single-hero__img {
+	height: clamp(200px, 50vw, 420px);
+}
+
+@media (max-width: 639px) {
+	.fbg-single-hero__img {
+		height: clamp(180px, 52vw, 280px);
+	}
+
+	.fbg-single-hero__meta h1 {
+		font-size: clamp(1.25rem, 5.5vw, 1.65rem);
+	}
+
+	.fbg-single-layout {
+		padding-block: var(--space-xl);
+	}
+
+	.fbg-single-content {
+		font-size: 1rem;
+		line-height: 1.7;
+	}
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+	.fbg-single-layout {
+		grid-template-columns: minmax(0, 1fr) min(260px, 34%);
+		gap: var(--space-lg);
+	}
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+	.fbg-single-hero__img {
+		height: clamp(120px, 35vh, 200px);
+	}
+}
+
+/* —— Community archive —— */
+@media (max-width: 639px) {
+	.fbg-community-hero {
+		padding-block: var(--space-xl);
+	}
+
+	.fbg-pill {
+		min-height: 2.5rem;
+		padding-block: var(--space-sm);
+	}
+
+	.fbg-search-input,
+	.fbg-select {
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+}
+
+@media (max-width: 480px) {
+	.fbg-author-bio {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.fbg-ad-img {
+		max-height: 360px;
+	}
+}
+
+/* —— Home / marketing hero breathing room —— */
+@media (max-width: 639px) {
+	.fbg-hero {
+		padding-block: var(--space-2xl);
+	}
+
+	.fbg-mkt-hero {
+		padding: var(--space-2xl) var(--space-md) var(--space-xl);
+	}
+}
+
+/* —— Footer: bridge gap between 480px and 900px —— */
+@media (min-width: 480px) and (max-width: 899px) {
+	.fbg-footer__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+/* —— CTA form —— */
+@media (max-width: 479px) {
+	.fbg-cta-form input[type='email'] {
+		min-width: 0;
+		width: 100%;
+		max-width: none;
+	}
+}
+
+/* —— Dashboard & submit —— */
+@media (max-width: 959px) {
+	.fbg-dash-main {
+		padding: var(--space-md);
+	}
+}
+
+@media (min-width: 480px) and (max-width: 899px) {
+	.fbg-stat-cards {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 479px) {
+	.fbg-stat-cards {
+		grid-template-columns: 1fr;
+	}
+}
+
+.fbg-link-row {
+	grid-template-columns: 1fr;
+	align-items: stretch;
+}
+
+@media (min-width: 600px) {
+	.fbg-link-row {
+		grid-template-columns: 1fr 1fr auto;
+		align-items: center;
+	}
+}
+
+.fbg-table {
+	font-size: 0.8125rem;
+}
+
+@media (max-width: 639px) {
+	.fbg-table th,
+	.fbg-table td {
+		padding: var(--space-xs) var(--space-sm);
+	}
+}
+
+/* —— Auth split —— */
+@media (max-width: 899px) {
+	.fbg-auth-split__brand,
+	.fbg-auth-split__form {
+		padding: var(--space-lg);
+	}
+
+	.fbg-auth-quote {
+		font-size: clamp(1.05rem, 4vw, 1.2rem);
+		margin: var(--space-md) 0;
+	}
+}
+
+/* —— Large / ultrawide / TV: readable measure & container —— */
+@media (min-width: 1536px) {
+	.fbg-container {
+		width: min(1280px, 100% - 4rem);
+	}
+}
+
+@media (min-width: 1920px) {
+	.fbg-container {
+		width: min(1440px, 100% - 5rem);
+	}
+}
+
+@media (min-width: 2560px) {
+	.fbg-container {
+		width: min(1600px, 100% - 6rem);
+	}
+
+	:root {
+		font-size: 17px;
+	}
+}
+
+/* —— Notched devices —— */
+@supports (padding: max(0px)) {
+	body {
+		padding-left: max(0px, env(safe-area-inset-left, 0px));
+		padding-right: max(0px, env(safe-area-inset-right, 0px));
+		padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+	}
+}
+
+/* —— Reduced motion —— */
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

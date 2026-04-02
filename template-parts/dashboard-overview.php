@@ -5,6 +5,15 @@
  * @package Free_Backlinks_Generator
  */
 $user_id = get_current_user_id();
+$slot_lim       = function_exists( 'fbg_get_user_post_slot_limit' ) ? fbg_get_user_post_slot_limit( $user_id ) : 999;
+$slot_use       = function_exists( 'fbg_count_user_guest_posts_for_cap' ) ? fbg_count_user_guest_posts_for_cap( $user_id ) : 0;
+$can_submit     = function_exists( 'fbg_user_can_create_guest_post' ) ? fbg_user_can_create_guest_post( $user_id ) : true;
+$reads_done     = function_exists( 'fbg_get_user_completed_peer_reads' ) ? count( fbg_get_user_completed_peer_reads( $user_id ) ) : 0;
+$aff_total      = (int) get_user_meta( $user_id, '_fbg_aff_referral_total', true );
+$aff_org        = (int) get_user_meta( $user_id, '_fbg_aff_referral_organic', true );
+$aff_balance    = (float) get_user_meta( $user_id, '_fbg_aff_balance_usd', true );
+$aff_warn       = get_user_meta( $user_id, '_fbg_affiliate_warning', true );
+$aff_warn       = is_string( $aff_warn ) ? trim( $aff_warn ) : '';
 $approved       = get_posts(
 	array(
 		'post_type'      => 'fbg_post',
@@ -43,6 +52,38 @@ $max_bar     = max( 1, max( array_map( 'intval', $months ) ) );
 	<?php endif; ?>
 	<?php if ( isset( $_GET['submitted'] ) ) : ?>
 		<div class="fbg-banner fbg-banner--success"><?php esc_html_e( 'Your post was submitted for review.', 'free-backlinks-generator' ); ?></div>
+	<?php endif; ?>
+	<?php if ( $aff_warn !== '' ) : ?>
+		<div class="fbg-banner fbg-banner--welcome" style="border-color: rgba(229, 83, 75, 0.45); background: rgba(229, 83, 75, 0.08);">
+			<strong><?php esc_html_e( 'Affiliate program notice', 'free-backlinks-generator' ); ?></strong>
+			<p style="margin: 0.5em 0 0;"><?php echo esc_html( $aff_warn ); ?></p>
+		</div>
+	<?php endif; ?>
+	<?php if ( $slot_lim < 900 ) : ?>
+		<div class="fbg-banner fbg-banner--welcome">
+			<?php
+			printf(
+				/* translators: 1: slots used, 2: slot max, 3: peer posts fully read */
+				esc_html__( 'Guest-post slots: %1$d / %2$d in use. Community posts you have fully read (2+ min each): %3$d — every 2 unlock +1 slot.', 'free-backlinks-generator' ),
+				(int) $slot_use,
+				(int) $slot_lim,
+				(int) $reads_done
+			);
+			?>
+		</div>
+	<?php endif; ?>
+	<?php if ( $aff_total > 0 || $aff_balance > 0 ) : ?>
+		<div class="fbg-banner fbg-banner--success">
+			<?php
+			printf(
+				/* translators: 1: total referred hits, 2: organic hits, 3: USD balance */
+				esc_html__( 'Affiliate referrals: %1$d visits logged (%2$d from organic search). Pending balance: $%3$s (see Affiliate Program page for payout terms).', 'free-backlinks-generator' ),
+				(int) $aff_total,
+				(int) $aff_org,
+				esc_html( number_format_i18n( $aff_balance, 2 ) )
+			);
+			?>
+		</div>
 	<?php endif; ?>
 	<div class="fbg-stat-cards">
 		<div class="fbg-stat-card">
@@ -133,7 +174,11 @@ $max_bar     = max( 1, max( array_map( 'intval', $months ) ) );
 		</table>
 	</div>
 	<p class="fbg-quick-actions">
-		<a class="btn-primary" href="<?php echo esc_url( home_url( '/submit-post/' ) ); ?>"><?php esc_html_e( '+ Submit New Guest Post', 'free-backlinks-generator' ); ?></a>
+		<?php if ( $can_submit ) : ?>
+			<a class="btn-primary" href="<?php echo esc_url( home_url( '/submit-post/' ) ); ?>"><?php esc_html_e( '+ Submit New Guest Post', 'free-backlinks-generator' ); ?></a>
+		<?php else : ?>
+			<a class="btn-primary" href="<?php echo esc_url( get_post_type_archive_link( 'fbg_post' ) ); ?>"><?php esc_html_e( 'Read posts to unlock slots', 'free-backlinks-generator' ); ?> →</a>
+		<?php endif; ?>
 		<a class="btn-ghost" href="#links" data-tab-trigger="links"><?php esc_html_e( '📋 View All My Links', 'free-backlinks-generator' ); ?></a>
 		<a class="btn-ghost" href="#profile" data-tab-trigger="profile"><?php esc_html_e( '👤 Edit Profile', 'free-backlinks-generator' ); ?></a>
 	</p>

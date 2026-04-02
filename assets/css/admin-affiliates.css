@@ -1,0 +1,42 @@
+/**
+ * Affiliate Program admin screen.
+ *
+ * @package Free_Backlinks_Generator
+ */
+
+.fbg-aff-admin .fbg-aff-table {
+	margin-top: 1em;
+}
+
+.fbg-aff-admin .fbg-aff-actions {
+	vertical-align: top;
+}
+
+.fbg-aff-admin .fbg-aff-actions form {
+	margin: 0 0 6px;
+}
+
+.fbg-aff-admin .fbg-aff-actions .button {
+	margin-right: 4px;
+	margin-bottom: 4px;
+}
+
+.fbg-aff-admin .fbg-aff-details {
+	margin-top: 8px;
+	max-width: 320px;
+}
+
+.fbg-aff-admin .fbg-aff-pre {
+	white-space: pre-wrap;
+	font-size: 12px;
+	background: #f6f7f7;
+	padding: 8px;
+	border-radius: 4px;
+	max-height: 200px;
+	overflow: auto;
+}
+
+.fbg-aff-admin .fbg-aff-form {
+	max-width: 640px;
+	margin-top: 1em;
+}

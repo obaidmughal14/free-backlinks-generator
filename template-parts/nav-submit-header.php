@@ -17,6 +17,7 @@ $dash     = home_url( '/dashboard/' );
 			<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" width="180" height="44" loading="eager">
 		</a>
 		<nav class="fbg-submit-header__actions" aria-label="<?php esc_attr_e( 'Submission', 'free-backlinks-generator' ); ?>">
+			<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="fbg-submit-header__home"><?php esc_html_e( 'Go to Homepage', 'free-backlinks-generator' ); ?></a>
 			<a href="<?php echo esc_url( $dash ); ?>" class="fbg-submit-header__back">
 				<span class="fbg-submit-header__back-icon" aria-hidden="true">←</span>
 				<?php esc_html_e( 'Back to Dashboard', 'free-backlinks-generator' ); ?>

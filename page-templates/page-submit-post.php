@@ -15,6 +15,9 @@ $uid    = get_current_user_id();
 $max_l  = fbg_get_user_link_limit( $uid );
 $niches = fbg_niche_options();
 $ctypes = fbg_content_type_options();
+$can_new = function_exists( 'fbg_user_can_create_guest_post' ) ? fbg_user_can_create_guest_post( $uid ) : true;
+$slot_lim = function_exists( 'fbg_get_user_post_slot_limit' ) ? fbg_get_user_post_slot_limit( $uid ) : 999;
+$slot_use = function_exists( 'fbg_count_user_guest_posts_for_cap' ) ? fbg_count_user_guest_posts_for_cap( $uid ) : 0;
 ?>
 <main id="main-content" class="fbg-submit fbg-submit-wrap">
 	<section class="fbg-submit-hero" aria-labelledby="fbg-submit-title">
@@ -22,8 +25,40 @@ $ctypes = fbg_content_type_options();
 		<p class="fbg-submit__sub"><?php esc_html_e( 'Write original content in your niche with your backlinks embedded naturally. Posts are reviewed by our team within 24–48 hours before going live.', 'free-backlinks-generator' ); ?></p>
 	</section>
 
+	<?php if ( ! $can_new ) : ?>
+		<div class="fbg-submit-card">
+			<div class="fbg-alert fbg-alert--error" role="alert">
+				<p><strong><?php esc_html_e( 'Guest-post limit reached', 'free-backlinks-generator' ); ?></strong></p>
+				<p>
+					<?php
+					printf(
+						/* translators: 1: current posts, 2: max slots */
+						esc_html__( 'You are using %1$d of %2$d guest-post slots (drafts and submitted posts count). Read other members’ posts for at least 2 minutes each on an active tab — every 2 different posts unlock one more slot. You can also earn bonus slots through the affiliate program.', 'free-backlinks-generator' ),
+						(int) $slot_use,
+						(int) $slot_lim
+					);
+					?>
+				</p>
+				<p>
+					<a class="btn-primary" href="<?php echo esc_url( get_post_type_archive_link( 'fbg_post' ) ); ?>"><?php esc_html_e( 'Browse community posts', 'free-backlinks-generator' ); ?> →</a>
+					<a class="btn-ghost" href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>"><?php esc_html_e( 'Back to dashboard', 'free-backlinks-generator' ); ?></a>
+				</p>
+			</div>
+		</div>
+	<?php else : ?>
+
 	<div class="fbg-submit-card">
-		<div class="fbg-info-bar"><?php printf( esc_html__( 'Your plan allows up to %d backlinks per post. Use them naturally inside the article.', 'free-backlinks-generator' ), (int) $max_l ); ?></div>
+		<div class="fbg-info-bar">
+			<?php
+			printf(
+				/* translators: 1: backlinks per post, 2: slots used, 3: slot limit */
+				esc_html__( 'Up to %1$d backlinks per post. Guest-post slots: %2$d / %3$d in use (read others’ posts 2+ min each — every 2 posts unlock +1 slot).', 'free-backlinks-generator' ),
+				(int) $max_l,
+				(int) $slot_use,
+				(int) $slot_lim
+			);
+			?>
+		</div>
 		<div class="fbg-alert fbg-alert--error" id="fbg-submit-alert" role="alert" tabindex="-1" hidden></div>
 		<form id="fbg-submit-form" class="fbg-form fbg-submit-form" novalidate>
 			<div class="fbg-field">
@@ -90,6 +125,7 @@ $ctypes = fbg_content_type_options();
 			</div>
 		</form>
 	</div>
+	<?php endif; ?>
 </main>
 <?php
 get_footer();

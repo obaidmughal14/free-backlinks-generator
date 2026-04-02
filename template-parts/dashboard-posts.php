@@ -4,8 +4,9 @@
  *
  * @package Free_Backlinks_Generator
  */
-$user_id = get_current_user_id();
-$posts   = get_posts(
+$user_id    = get_current_user_id();
+$can_submit = function_exists( 'fbg_user_can_create_guest_post' ) ? fbg_user_can_create_guest_post( $user_id ) : true;
+$posts      = get_posts(
 	array(
 		'post_type'      => 'fbg_post',
 		'author'         => $user_id,
@@ -32,7 +33,11 @@ $posts   = get_posts(
 		<div class="fbg-empty">
 			<h3><?php esc_html_e( 'No guest posts yet', 'free-backlinks-generator' ); ?></h3>
 			<p><?php esc_html_e( 'Submit your first guest post and start earning free backlinks.', 'free-backlinks-generator' ); ?></p>
-			<a class="btn-primary" href="<?php echo esc_url( home_url( '/submit-post/' ) ); ?>"><?php esc_html_e( 'Submit Your First Post', 'free-backlinks-generator' ); ?> →</a>
+			<?php if ( $can_submit ) : ?>
+				<a class="btn-primary" href="<?php echo esc_url( home_url( '/submit-post/' ) ); ?>"><?php esc_html_e( 'Submit Your First Post', 'free-backlinks-generator' ); ?> →</a>
+			<?php else : ?>
+				<a class="btn-primary" href="<?php echo esc_url( get_post_type_archive_link( 'fbg_post' ) ); ?>"><?php esc_html_e( 'Browse posts to unlock a slot', 'free-backlinks-generator' ); ?> →</a>
+			<?php endif; ?>
 		</div>
 	<?php else : ?>
 		<form id="fbg-posts-bulk" class="fbg-table-wrap">

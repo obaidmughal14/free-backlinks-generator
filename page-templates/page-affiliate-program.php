@@ -6,62 +6,78 @@
  */
 
 get_header();
+$uid         = is_user_logged_in() ? get_current_user_id() : 0;
+$ref_home    = $uid ? add_query_arg( 'fbg_ref', $uid, home_url( '/' ) ) : '';
+$is_partner  = $uid && function_exists( 'fbg_is_user_affiliate_partner' ) ? fbg_is_user_affiliate_partner( $uid ) : false;
 ?>
 <main id="main-content" class="fbg-main">
 	<section class="fbg-mkt-hero" aria-labelledby="fbg-aff-title">
 		<div class="fbg-container">
 			<div class="fbg-mkt-hero__badges">
-				<span class="fbg-mkt-badge"><?php esc_html_e( 'Recurring commissions', 'free-backlinks-generator' ); ?></span>
-				<span class="fbg-mkt-badge"><?php esc_html_e( '90-day attribution', 'free-backlinks-generator' ); ?></span>
-				<span class="fbg-mkt-badge"><?php esc_html_e( 'Monthly payouts', 'free-backlinks-generator' ); ?></span>
+				<span class="fbg-mkt-badge"><?php esc_html_e( 'Organic traffic rewards', 'free-backlinks-generator' ); ?></span>
+				<span class="fbg-mkt-badge"><?php esc_html_e( '90-day cookie', 'free-backlinks-generator' ); ?></span>
+				<span class="fbg-mkt-badge"><?php esc_html_e( 'Reads & messages count', 'free-backlinks-generator' ); ?></span>
 			</div>
-			<h1 id="fbg-aff-title"><?php esc_html_e( 'Earn with the Free Backlinks Generator partner program', 'free-backlinks-generator' ); ?></h1>
+			<h1 id="fbg-aff-title"><?php esc_html_e( 'Affiliate program: earn from real readers', 'free-backlinks-generator' ); ?></h1>
 			<p class="fbg-mkt-hero__lead">
-				<?php esc_html_e( 'Promote a platform that helps SEOs and bloggers exchange quality guest posts. You earn a share of every paid upgrade from traffic you refer — with transparent tracking and real-time stats in your partner dashboard (issued after approval).', 'free-backlinks-generator' ); ?>
+				<?php esc_html_e( 'Share your link (see below). When someone arrives with your referral and reads community guest posts or uses the contact form on a post, we attribute that engagement to you. Organic search visits stack toward cash; all attributed visits also stack toward bonus guest-post slots.', 'free-backlinks-generator' ); ?>
 			</p>
 			<div class="fbg-mkt-stats" role="group" aria-label="<?php esc_attr_e( 'Program highlights', 'free-backlinks-generator' ); ?>">
 				<div class="fbg-mkt-stat">
-					<strong>30%</strong>
-					<span><?php esc_html_e( 'Recurring on Pro subscriptions', 'free-backlinks-generator' ); ?></span>
+					<strong>$2</strong>
+					<span><?php esc_html_e( 'Per 1,000 organic search visits attributed', 'free-backlinks-generator' ); ?></span>
+				</div>
+				<div class="fbg-mkt-stat">
+					<strong>+10</strong>
+					<span><?php esc_html_e( 'Bonus guest-post slots per 1,000 total attributed visits', 'free-backlinks-generator' ); ?></span>
 				</div>
 				<div class="fbg-mkt-stat">
 					<strong>90</strong>
-					<span><?php esc_html_e( 'Day cookie window', 'free-backlinks-generator' ); ?></span>
-				</div>
-				<div class="fbg-mkt-stat">
-					<strong>$50</strong>
-					<span><?php esc_html_e( 'Minimum payout threshold', 'free-backlinks-generator' ); ?></span>
+					<span><?php esc_html_e( 'Days referral cookie (first touch)', 'free-backlinks-generator' ); ?></span>
 				</div>
 			</div>
 		</div>
 	</section>
 
+	<?php if ( is_user_logged_in() && $ref_home ) : ?>
+		<section class="fbg-mkt-section fbg-container">
+			<?php if ( ! $is_partner ) : ?>
+				<div class="fbg-mkt-card" style="padding: var(--space-lg); border: 1px solid rgba(245, 166, 35, 0.45); border-radius: var(--radius-lg); background: rgba(245, 166, 35, 0.08); margin-bottom: var(--space-lg);">
+					<h2 style="margin-top: 0;"><?php esc_html_e( 'Activation pending', 'free-backlinks-generator' ); ?></h2>
+					<p class="fbg-mkt-section__sub" style="margin-bottom: 0;"><?php esc_html_e( 'An administrator must approve your account before referral visits earn credit. Submit the partner application below if you have not already. Until then, the link below will not accumulate rewards.', 'free-backlinks-generator' ); ?></p>
+				</div>
+			<?php endif; ?>
+			<div class="fbg-mkt-card" style="padding: var(--space-lg); border: 1px solid var(--color-border); border-radius: var(--radius-lg);">
+				<h2 style="margin-top: 0;"><?php esc_html_e( 'Your referral link', 'free-backlinks-generator' ); ?></h2>
+				<p class="fbg-mkt-section__sub" style="margin-bottom: var(--space-md);"><?php esc_html_e( 'Add this parameter to any URL on the site (home, a guest post, or the register page). When visitors use it, reads and sidebar messages can credit your account once you are an approved partner.', 'free-backlinks-generator' ); ?></p>
+				<p class="mono" style="word-break: break-all; font-size: 0.9rem; background: var(--color-bg); padding: var(--space-md); border-radius: var(--radius-md);"><?php echo esc_html( $ref_home ); ?></p>
+				<p style="margin-bottom: 0; font-size: 0.9rem; color: var(--color-text-secondary);"><?php esc_html_e( 'Example: append ?fbg_ref=YOUR_USER_ID to links you share. Organic detection uses the visitor’s referrer (Google, Bing, DuckDuckGo, etc.).', 'free-backlinks-generator' ); ?></p>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<section class="fbg-mkt-section fbg-container">
-		<h2><?php esc_html_e( 'Commission structure', 'free-backlinks-generator' ); ?></h2>
-		<p class="fbg-mkt-section__sub"><?php esc_html_e( 'Rates apply to net subscription revenue after discounts. Payouts are processed monthly via PayPal or bank transfer where supported.', 'free-backlinks-generator' ); ?></p>
+		<h2><?php esc_html_e( 'How rewards add up', 'free-backlinks-generator' ); ?></h2>
+		<p class="fbg-mkt-section__sub"><?php esc_html_e( 'Balances and slot bonuses are tracked automatically. Payouts of cash balances are processed according to your partner agreement after approval — contact us when you reach a balance you want settled.', 'free-backlinks-generator' ); ?></p>
 		<div class="fbg-mkt-table-wrap">
 			<table class="fbg-mkt-table">
 				<thead>
 					<tr>
-						<th scope="col"><?php esc_html_e( 'Product', 'free-backlinks-generator' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'First payment', 'free-backlinks-generator' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Recurring', 'free-backlinks-generator' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Signal', 'free-backlinks-generator' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'What you earn', 'free-backlinks-generator' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td><?php esc_html_e( 'Pro — monthly', 'free-backlinks-generator' ); ?></td>
-						<td class="fbg-mkt-highlight">40%</td>
-						<td class="fbg-mkt-highlight">30%</td>
+						<td><?php esc_html_e( '1,000 attributed visits from organic search (per visitor referrer)', 'free-backlinks-generator' ); ?></td>
+						<td class="fbg-mkt-highlight"><?php esc_html_e( '$2 added to your affiliate balance (repeats every 1,000 organic)', 'free-backlinks-generator' ); ?></td>
 					</tr>
 					<tr>
-						<td><?php esc_html_e( 'Pro — annual', 'free-backlinks-generator' ); ?></td>
-						<td class="fbg-mkt-highlight">25%</td>
-						<td><?php esc_html_e( 'N/A (prepaid)', 'free-backlinks-generator' ); ?></td>
+						<td><?php esc_html_e( '1,000 total attributed engagements (any mix: reading posts, sidebar contact, etc.)', 'free-backlinks-generator' ); ?></td>
+						<td class="fbg-mkt-highlight"><?php esc_html_e( '10 extra guest-post writing slots on your member account', 'free-backlinks-generator' ); ?></td>
 					</tr>
 					<tr>
-						<td><?php esc_html_e( 'Agency / volume (custom)', 'free-backlinks-generator' ); ?></td>
-						<td colspan="2"><?php esc_html_e( 'Negotiated — contact partnerships', 'free-backlinks-generator' ); ?></td>
+						<td colspan="2"><?php esc_html_e( 'Self-clicks and bot traffic may be discarded. One view credit per post per IP per day to limit abuse.', 'free-backlinks-generator' ); ?></td>
 					</tr>
 				</tbody>
 			</table>
@@ -71,23 +87,23 @@ get_header();
 	<section class="fbg-mkt-section fbg-mkt-section--alt">
 		<div class="fbg-container">
 			<h2><?php esc_html_e( 'How it works', 'free-backlinks-generator' ); ?></h2>
-			<p class="fbg-mkt-section__sub"><?php esc_html_e( 'Four steps from application to your first commission.', 'free-backlinks-generator' ); ?></p>
+			<p class="fbg-mkt-section__sub"><?php esc_html_e( 'From link sharing to tracked engagement.', 'free-backlinks-generator' ); ?></p>
 			<ol class="fbg-mkt-steps">
 				<li>
-					<strong><?php esc_html_e( 'Apply', 'free-backlinks-generator' ); ?></strong>
-					<?php esc_html_e( 'Submit the form below. We review audience fit, content quality, and compliance with our advertising guidelines.', 'free-backlinks-generator' ); ?>
+					<strong><?php esc_html_e( 'Apply or get approved', 'free-backlinks-generator' ); ?></strong>
+					<?php esc_html_e( 'After an admin activates your partner status, the link above starts earning credit. New partners usually apply with the form below; existing members may be added directly in the dashboard.', 'free-backlinks-generator' ); ?>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Get your links', 'free-backlinks-generator' ); ?></strong>
-					<?php esc_html_e( 'Approved partners receive a unique tracking ID, deep links, and optional creatives (banners + copy).', 'free-backlinks-generator' ); ?>
+					<strong><?php esc_html_e( 'Visitors land with fbg_ref', 'free-backlinks-generator' ); ?></strong>
+					<?php esc_html_e( 'We set a 90-day cookie so later visits can stay attributed when reasonable.', 'free-backlinks-generator' ); ?>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Share & convert', 'free-backlinks-generator' ); ?></strong>
-					<?php esc_html_e( 'Referrals are attributed for 90 days from the first click. Self-referrals and coupon abuse are void.', 'free-backlinks-generator' ); ?>
+					<strong><?php esc_html_e( 'They read or message', 'free-backlinks-generator' ); ?></strong>
+					<?php esc_html_e( 'Opening community posts (once per post per day per IP) or sending a sidebar message records engagement for you.', 'free-backlinks-generator' ); ?>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Get paid', 'free-backlinks-generator' ); ?></strong>
-					<?php esc_html_e( 'Balances over $50 are paid by the 15th of each month. You can export CSV statements from the partner portal.', 'free-backlinks-generator' ); ?>
+					<strong><?php esc_html_e( 'You collect balance + slots', 'free-backlinks-generator' ); ?></strong>
+					<?php esc_html_e( 'Organic milestones pay into your USD balance; total milestones grant bonus guest-post slots. Check your dashboard for running totals.', 'free-backlinks-generator' ); ?>
 				</li>
 			</ol>
 		</div>
@@ -128,7 +144,11 @@ get_header();
 				</details>
 				<details>
 					<summary><?php esc_html_e( 'How do I track performance?', 'free-backlinks-generator' ); ?></summary>
-					<p><?php esc_html_e( 'After approval you receive dashboard access with clicks, trials, conversions, and earnings in near real time.', 'free-backlinks-generator' ); ?></p>
+					<p><?php esc_html_e( 'Your dashboard shows referral visit totals, organic counts, USD balance, and notifications when you hit a milestone. Detailed exports can be requested from support.', 'free-backlinks-generator' ); ?></p>
+				</details>
+				<details>
+					<summary><?php esc_html_e( 'What counts as “organic”?', 'free-backlinks-generator' ); ?></summary>
+					<p><?php esc_html_e( 'We look at the browser referrer for major search engines (e.g. Google, Bing, DuckDuckGo). Direct or social traffic still counts toward the 1,000-visit bonus guest-post slots.', 'free-backlinks-generator' ); ?></p>
 				</details>
 			</div>
 		</div>

@@ -405,6 +405,18 @@ body.fbg-submit-page #main-content {
 	gap: var(--space-md);
 	flex-wrap: wrap;
 }
+.fbg-submit-header__home {
+	font-weight: 600;
+	color: var(--color-primary);
+	text-decoration: none;
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--color-border);
+}
+.fbg-submit-header__home:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent-dark);
+}
 .fbg-submit-header__back {
 	display: inline-flex;
 	align-items: center;
