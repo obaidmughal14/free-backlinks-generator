@@ -739,3 +739,49 @@ function fbg_handle_affiliate_apply() {
 }
 add_action( 'wp_ajax_nopriv_fbg_affiliate_apply', 'fbg_handle_affiliate_apply' );
 add_action( 'wp_ajax_fbg_affiliate_apply', 'fbg_handle_affiliate_apply' );
+
+/**
+ * Sidebar contact form on single guest post (public).
+ */
+function fbg_handle_sidebar_contact() {
+	check_ajax_referer( 'fbg_sidebar_contact_nonce', 'nonce' );
+
+	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '0';
+	$key = 'fbg_sidebar_contact_' . md5( $ip );
+	$hit = (int) get_transient( $key );
+	if ( $hit >= 8 ) {
+		wp_send_json_error( array( 'message' => __( 'Too many messages sent. Please try again later.', 'free-backlinks-generator' ) ) );
+	}
+	set_transient( $key, $hit + 1, HOUR_IN_SECONDS );
+
+	$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+	$mail = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+	$msg  = isset( $_POST['message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['message'] ) ) : '';
+
+	if ( strlen( $name ) < 2 || ! is_email( $mail ) || strlen( $msg ) < 10 ) {
+		wp_send_json_error( array( 'message' => __( 'Please fill in all fields with a real email and a message of at least 10 characters.', 'free-backlinks-generator' ) ) );
+	}
+
+	$admin = get_option( 'admin_email' );
+	if ( ! is_email( $admin ) ) {
+		wp_send_json_error( array( 'message' => __( 'Message could not be sent. Please try the Contact page.', 'free-backlinks-generator' ) ) );
+	}
+
+	$subj = sprintf(
+		/* translators: %s site name */
+		__( '[%s] Sidebar contact form', 'free-backlinks-generator' ),
+		get_bloginfo( 'name' )
+	);
+	$body = sprintf(
+		"Name: %s\nEmail: %s\n\n%s\n",
+		$name,
+		$mail,
+		$msg
+	);
+	$headers = array( 'Content-Type: text/plain; charset=UTF-8', 'Reply-To: ' . $mail );
+	wp_mail( $admin, $subj, $body, $headers );
+
+	wp_send_json_success();
+}
+add_action( 'wp_ajax_nopriv_fbg_sidebar_contact', 'fbg_handle_sidebar_contact' );
+add_action( 'wp_ajax_fbg_sidebar_contact', 'fbg_handle_sidebar_contact' );

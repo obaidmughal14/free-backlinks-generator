@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.0.4' );
+define( 'FBG_VERSION', '1.0.6' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -19,6 +19,7 @@ require_once FBG_DIR . '/inc/user-roles.php';
 require_once FBG_DIR . '/inc/security.php';
 require_once FBG_DIR . '/inc/seo.php';
 require_once FBG_DIR . '/inc/ajax-handlers.php';
+require_once FBG_DIR . '/inc/sidebar-ads.php';
 
 /**
  * Theme setup.
@@ -41,6 +42,7 @@ function fbg_theme_setup() {
 
 	add_image_size( 'fbg_card', 800, 450, true );
 	add_image_size( 'fbg_hero', 1600, 700, true );
+	add_image_size( 'fbg_sidebar_ad', 300, 600, true );
 }
 add_action( 'after_setup_theme', 'fbg_theme_setup' );
 
@@ -127,6 +129,19 @@ function fbg_enqueue_assets() {
 
 	if ( is_singular( 'fbg_post' ) ) {
 		wp_enqueue_style( 'fbg-blog', FBG_URI . '/assets/css/blog.css', array( 'fbg-main' ), FBG_VERSION );
+		wp_enqueue_script( 'fbg-single-sidebar', FBG_URI . '/assets/js/single-sidebar.js', array(), FBG_VERSION, true );
+		wp_localize_script(
+			'fbg-single-sidebar',
+			'fbgSingleSidebar',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'fbg_sidebar_contact_nonce' ),
+				'strings' => array(
+					'sent'  => __( 'Thanks — your message was sent.', 'free-backlinks-generator' ),
+					'error' => __( 'Could not send. Please try again.', 'free-backlinks-generator' ),
+				),
+			)
+		);
 	}
 
 	if (
@@ -217,6 +232,9 @@ add_filter( 'body_class', 'fbg_body_class' );
  */
 function fbg_theme_activation() {
 	fbg_register_post_types();
+	if ( function_exists( 'fbg_register_sidebar_ad_cpt' ) ) {
+		fbg_register_sidebar_ad_cpt();
+	}
 	if ( ! get_role( 'fbg_member' ) ) {
 		$sub  = get_role( 'subscriber' );
 		$caps = $sub ? $sub->capabilities : array( 'read' => true );

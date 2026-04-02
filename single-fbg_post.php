@@ -17,17 +17,6 @@ while ( have_posts() ) :
 	$link_count  = (int) get_post_meta( get_the_ID(), '_fbg_backlink_count', true );
 	?>
 	<main id="main-content" class="fbg-single-post">
-		<nav class="fbg-breadcrumb fbg-container" aria-label="<?php esc_attr_e( 'Breadcrumb', 'free-backlinks-generator' ); ?>">
-			<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Home', 'free-backlinks-generator' ); ?></a>
-			<span aria-hidden="true"> → </span>
-			<a href="<?php echo esc_url( get_post_type_archive_link( 'fbg_post' ) ); ?>"><?php esc_html_e( 'Community', 'free-backlinks-generator' ); ?></a>
-			<?php if ( $niche_name ) : ?>
-				<span aria-hidden="true"> → </span>
-				<span><?php echo esc_html( $niche_name ); ?></span>
-			<?php endif; ?>
-			<span aria-hidden="true"> → </span>
-			<span class="fbg-breadcrumb__current"><?php the_title(); ?></span>
-		</nav>
 		<div class="fbg-single-hero">
 			<?php
 			if ( has_post_thumbnail() ) {
@@ -43,6 +32,17 @@ while ( have_posts() ) :
 					<span class="fbg-badge fbg-badge--muted"><?php echo esc_html( $type_name ); ?></span>
 				<?php endif; ?>
 				<h1><?php the_title(); ?></h1>
+				<nav class="fbg-breadcrumb fbg-breadcrumb--hero" aria-label="<?php esc_attr_e( 'Breadcrumb', 'free-backlinks-generator' ); ?>">
+					<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Home', 'free-backlinks-generator' ); ?></a>
+					<span aria-hidden="true"> → </span>
+					<a href="<?php echo esc_url( get_post_type_archive_link( 'fbg_post' ) ); ?>"><?php esc_html_e( 'Community', 'free-backlinks-generator' ); ?></a>
+					<?php if ( $niche_name ) : ?>
+						<span aria-hidden="true"> → </span>
+						<span><?php echo esc_html( $niche_name ); ?></span>
+					<?php endif; ?>
+					<span aria-hidden="true"> → </span>
+					<span class="fbg-breadcrumb__current"><?php the_title(); ?></span>
+				</nav>
 				<p class="fbg-single-byline">
 					<span class="author-avatar"><?php echo esc_html( strtoupper( substr( get_the_author_meta( 'display_name' ), 0, 1 ) ) ); ?></span>
 					<?php echo esc_html( get_the_author_meta( 'display_name' ) ); ?> ·
@@ -58,12 +58,17 @@ while ( have_posts() ) :
 				</p>
 			</div>
 		</div>
-		<div class="fbg-container fbg-single-content fbg-prose">
-			<?php the_content(); ?>
-		</div>
-		<div class="fbg-container fbg-single-aside">
-			<?php get_template_part( 'template-parts/backlinks', 'list' ); ?>
-			<?php get_template_part( 'template-parts/author', 'bio' ); ?>
+		<div class="fbg-container fbg-single-layout">
+			<div class="fbg-single-layout__main">
+				<div class="fbg-single-content fbg-prose">
+					<?php the_content(); ?>
+				</div>
+				<div class="fbg-single-aside">
+					<?php get_template_part( 'template-parts/backlinks', 'list' ); ?>
+					<?php get_template_part( 'template-parts/author', 'bio' ); ?>
+				</div>
+			</div>
+			<?php get_template_part( 'template-parts/single', 'sidebar' ); ?>
 		</div>
 		<section class="fbg-related fbg-container">
 			<h3><?php printf( esc_html__( 'More from the %s Community', 'free-backlinks-generator' ), esc_html( $niche_name ? $niche_name : __( 'Guest', 'free-backlinks-generator' ) ) ); ?></h3>
