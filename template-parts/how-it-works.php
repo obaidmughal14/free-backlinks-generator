@@ -22,7 +22,7 @@
 					<img src="<?php echo esc_url( get_theme_file_uri( 'assets/images/icon-posts.svg' ) ); ?>" alt="" width="48" height="48">
 				</div>
 				<h3><?php esc_html_e( 'Write & Submit a Guest Post', 'free-backlinks-generator' ); ?></h3>
-				<p><?php esc_html_e( 'Publish an original blog post (minimum 600 words) in your niche with your backlinks embedded naturally in the content. Free members can include up to 3 backlinks per post. Our editorial team reviews every submission within 24–48 hours to maintain content quality.', 'free-backlinks-generator' ); ?></p>
+				<p><?php esc_html_e( 'Publish an original blog post (minimum 200 words) in your niche with your backlinks embedded naturally in the content. Free members can include up to 3 backlinks per post. Our editorial team reviews every submission within 24–48 hours to maintain content quality.', 'free-backlinks-generator' ); ?></p>
 			</div>
 			<div class="fbg-step">
 				<div class="fbg-step__icon" aria-hidden="true">

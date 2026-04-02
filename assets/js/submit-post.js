@@ -88,8 +88,8 @@
 	function updWc() {
 		var n = wordCount(getEditorContent());
 		if (wcEl) {
-			wcEl.textContent = n + ' / 600 minimum';
-			wcEl.className = 'fbg-char-count' + (n >= 800 ? ' is-good' : n >= 600 ? ' is-warn' : ' is-bad');
+			wcEl.textContent = n + ' / 200 minimum';
+			wcEl.className = 'fbg-char-count' + (n >= 500 ? ' is-good' : n >= 200 ? ' is-warn' : ' is-bad');
 		}
 	}
 	setInterval(updWc, 800);

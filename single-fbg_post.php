@@ -71,30 +71,39 @@ while ( have_posts() ) :
 			<?php get_template_part( 'template-parts/single', 'sidebar' ); ?>
 		</div>
 		<section class="fbg-related fbg-container">
-			<h3><?php printf( esc_html__( 'More from the %s Community', 'free-backlinks-generator' ), esc_html( $niche_name ? $niche_name : __( 'Guest', 'free-backlinks-generator' ) ) ); ?></h3>
+			<h3>
+				<?php
+				if ( $niche_name ) {
+					printf(
+						/* translators: %s niche name */
+						esc_html__( 'More from %s', 'free-backlinks-generator' ),
+						esc_html( $niche_name )
+					);
+				} else {
+					esc_html_e( 'More guest posts', 'free-backlinks-generator' );
+				}
+				?>
+			</h3>
 			<div class="fbg-post-grid fbg-post-grid--related">
 				<?php
-				$related = new WP_Query(
-					array(
-						'post_type'      => 'fbg_post',
-						'post_status'    => 'publish',
-						'posts_per_page' => 3,
-						'post__not_in'   => array( get_the_ID() ),
-						'tax_query'      => $niche_terms && ! is_wp_error( $niche_terms ) ? array(
-							array(
-								'taxonomy' => 'fbg_niche',
-								'field'    => 'term_id',
-								'terms'    => $niche_terms[0]->term_id,
-							),
-						) : array(),
-					)
-				);
-				if ( $related->have_posts() ) {
-					while ( $related->have_posts() ) {
-						$related->the_post();
-						get_template_part( 'template-parts/blog', 'card' );
+				$related_ids = fbg_get_related_fbg_post_ids( get_the_ID(), 3 );
+				if ( ! empty( $related_ids ) ) {
+					$related = new WP_Query(
+						array(
+							'post_type'      => 'fbg_post',
+							'post_status'    => 'publish',
+							'post__in'       => $related_ids,
+							'orderby'        => 'post__in',
+							'posts_per_page' => count( $related_ids ),
+						)
+					);
+					if ( $related->have_posts() ) {
+						while ( $related->have_posts() ) {
+							$related->the_post();
+							get_template_part( 'template-parts/blog', 'card' );
+						}
+						wp_reset_postdata();
 					}
-					wp_reset_postdata();
 				}
 				?>
 			</div>

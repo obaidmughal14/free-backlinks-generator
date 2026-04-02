@@ -44,7 +44,7 @@
 	if (!slider) return;
 	var viewport = slider.querySelector('.fbg-ad-slider__viewport');
 	var slides = slider.querySelectorAll('.fbg-ad-slider__slide');
-	if (!viewport || slides.length < 2) return;
+	if (!viewport || slides.length === 0) return;
 
 	function slideWidth() {
 		return viewport.clientWidth;
@@ -60,7 +60,7 @@
 	if (next) next.addEventListener('click', function () { go(1); });
 
 	var autoplay = parseInt(slider.getAttribute('data-autoplay'), 10) || 0;
-	if (autoplay > 0) {
+	if (autoplay > 0 && slides.length > 1) {
 		setInterval(function () {
 			var maxScroll = viewport.scrollWidth - viewport.clientWidth;
 			if (maxScroll <= 0) return;

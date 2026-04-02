@@ -633,3 +633,85 @@ function fbg_published_post_count() {
 	);
 	return (int) $q->found_posts;
 }
+
+/**
+ * Related published guest post IDs: same niche, then same author, then recent community posts.
+ *
+ * @param int $post_id Current post ID.
+ * @param int $limit   Max posts.
+ * @return array<int>
+ */
+function fbg_get_related_fbg_post_ids( $post_id, $limit = 3 ) {
+	$post = get_post( $post_id );
+	if ( ! $post || 'fbg_post' !== $post->post_type ) {
+		return array();
+	}
+	$limit       = max( 1, (int) $limit );
+	$exclude     = array( (int) $post_id );
+	$found_ids   = array();
+	$niche_terms = get_the_terms( $post_id, 'fbg_niche' );
+
+	if ( $niche_terms && ! is_wp_error( $niche_terms ) ) {
+		$q1 = new WP_Query(
+			array(
+				'post_type'      => 'fbg_post',
+				'post_status'    => 'publish',
+				'posts_per_page' => $limit,
+				'post__not_in'   => $exclude,
+				'fields'         => 'ids',
+				'tax_query'      => array(
+					array(
+						'taxonomy' => 'fbg_niche',
+						'field'    => 'term_id',
+						'terms'    => (int) $niche_terms[0]->term_id,
+					),
+				),
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			)
+		);
+		foreach ( $q1->posts as $id ) {
+			$found_ids[] = (int) $id;
+		}
+		wp_reset_postdata();
+	}
+
+	if ( count( $found_ids ) < $limit ) {
+		$q2 = new WP_Query(
+			array(
+				'post_type'      => 'fbg_post',
+				'post_status'    => 'publish',
+				'posts_per_page' => $limit - count( $found_ids ),
+				'post__not_in'   => array_merge( $exclude, $found_ids ),
+				'fields'         => 'ids',
+				'author'         => (int) $post->post_author,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			)
+		);
+		foreach ( $q2->posts as $id ) {
+			$found_ids[] = (int) $id;
+		}
+		wp_reset_postdata();
+	}
+
+	if ( count( $found_ids ) < $limit ) {
+		$q3 = new WP_Query(
+			array(
+				'post_type'      => 'fbg_post',
+				'post_status'    => 'publish',
+				'posts_per_page' => $limit - count( $found_ids ),
+				'post__not_in'   => array_merge( $exclude, $found_ids ),
+				'fields'         => 'ids',
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			)
+		);
+		foreach ( $q3->posts as $id ) {
+			$found_ids[] = (int) $id;
+		}
+		wp_reset_postdata();
+	}
+
+	return array_slice( $found_ids, 0, $limit );
+}

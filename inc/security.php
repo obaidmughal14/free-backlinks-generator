@@ -60,3 +60,41 @@ function fbg_rest_user_visibility( $response, $user, $request ) {
 	return $response;
 }
 add_filter( 'rest_prepare_user', 'fbg_rest_user_visibility', 10, 3 );
+
+/**
+ * Media library (modal): members only see their own uploads on the front end and in AJAX.
+ * Administrators and users who can edit others’ posts keep full access.
+ *
+ * @param array<string, mixed> $query Query args for attachments.
+ * @return array<string, mixed>
+ */
+function fbg_limit_media_library_to_current_user( $query ) {
+	if ( ! is_user_logged_in() ) {
+		return $query;
+	}
+	if ( current_user_can( 'manage_options' ) || current_user_can( 'edit_others_posts' ) ) {
+		return $query;
+	}
+	$query['author'] = get_current_user_id();
+	return $query;
+}
+add_filter( 'ajax_query_attachments_args', 'fbg_limit_media_library_to_current_user', 10, 1 );
+
+/**
+ * REST API media list: same restriction for the block/REST media picker.
+ *
+ * @param array<string, mixed>    $args    Query args.
+ * @param WP_REST_Request         $request Request (unused).
+ * @return array<string, mixed>
+ */
+function fbg_rest_limit_media_to_author( $args, $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	if ( ! is_user_logged_in() ) {
+		return $args;
+	}
+	if ( current_user_can( 'manage_options' ) || current_user_can( 'edit_others_posts' ) ) {
+		return $args;
+	}
+	$args['author'] = get_current_user_id();
+	return $args;
+}
+add_filter( 'rest_attachment_query', 'fbg_rest_limit_media_to_author', 10, 2 );

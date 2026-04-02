@@ -71,7 +71,7 @@ $ctypes = fbg_content_type_options();
 					)
 				);
 				?>
-				<span id="fbg-word-count" class="fbg-char-count" aria-live="polite">0 / 600 <?php esc_html_e( 'minimum', 'free-backlinks-generator' ); ?></span>
+				<span id="fbg-word-count" class="fbg-char-count" aria-live="polite">0 / 200 <?php esc_html_e( 'minimum', 'free-backlinks-generator' ); ?></span>
 			</div>
 			<div class="fbg-field">
 				<label><?php esc_html_e( 'Your Backlinks', 'free-backlinks-generator' ); ?> *</label>

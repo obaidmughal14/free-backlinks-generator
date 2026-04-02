@@ -280,11 +280,15 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-lg);
+	position: static;
+}
+/* Sticky contact only when there are no sponsored ads (long sidebar scrolls naturally with ads). */
+.fbg-post-sidebar--contact-only {
 	position: sticky;
-	top: calc(var(--space-md) + 1rem);
+	top: var(--space-md);
 }
 @media (max-width: 1023px) {
-	.fbg-post-sidebar {
+	.fbg-post-sidebar--contact-only {
 		position: static;
 	}
 }

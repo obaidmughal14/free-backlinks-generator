@@ -109,7 +109,7 @@ function fbg_sidebar_ads_register_settings() {
 		array(
 			'type'              => 'string',
 			'sanitize_callback' => 'fbg_sanitize_sidebar_ads_mode',
-			'default'           => 'stack',
+			'default'           => 'slider',
 		)
 	);
 	register_setting(
@@ -130,7 +130,7 @@ add_action( 'admin_init', 'fbg_sidebar_ads_register_settings' );
  */
 function fbg_sanitize_sidebar_ads_mode( $v ) {
 	$allowed = array( 'random', 'slider', 'stack' );
-	return in_array( $v, $allowed, true ) ? $v : 'stack';
+	return in_array( $v, $allowed, true ) ? $v : 'slider';
 }
 
 /**
@@ -154,7 +154,7 @@ function fbg_render_sidebar_ads_settings_page() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$mode      = get_option( 'fbg_sidebar_ads_mode', 'stack' );
+	$mode      = get_option( 'fbg_sidebar_ads_mode', 'slider' );
 	$autoplay  = (int) get_option( 'fbg_sidebar_ads_autoplay', 5 );
 	$edit_link = admin_url( 'edit.php?post_type=fbg_sidebar_ad' );
 	?>
@@ -176,11 +176,11 @@ function fbg_render_sidebar_ads_settings_page() {
 					<th scope="row"><?php esc_html_e( 'Display mode', 'free-backlinks-generator' ); ?></th>
 					<td>
 						<select name="fbg_sidebar_ads_mode" id="fbg_sidebar_ads_mode">
-							<option value="stack" <?php selected( $mode, 'stack' ); ?>><?php esc_html_e( 'Stacked — show all active ads (portrait, top to bottom)', 'free-backlinks-generator' ); ?></option>
-							<option value="random" <?php selected( $mode, 'random' ); ?>><?php esc_html_e( 'Random — pick one active ad per page load', 'free-backlinks-generator' ); ?></option>
-							<option value="slider" <?php selected( $mode, 'slider' ); ?>><?php esc_html_e( 'Slider — rotate through all active ads', 'free-backlinks-generator' ); ?></option>
+							<option value="slider" <?php selected( $mode, 'slider' ); ?>><?php esc_html_e( 'Slider — one ad at a time with prev/next (and optional autoplay)', 'free-backlinks-generator' ); ?></option>
+							<option value="stack" <?php selected( $mode, 'stack' ); ?>><?php esc_html_e( 'Stacked — all active ads listed vertically (one under another)', 'free-backlinks-generator' ); ?></option>
+							<option value="random" <?php selected( $mode, 'random' ); ?>><?php esc_html_e( 'Random — show a single random ad per page load', 'free-backlinks-generator' ); ?></option>
 						</select>
-						<p class="description"><?php esc_html_e( 'In stack mode, use the “Order” field on each ad to control sequence (lower = higher on the page).', 'free-backlinks-generator' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Stack mode: use the “Order” field on each ad for top-to-bottom order. Slider mode: use autoplay seconds below (0 = manual only).', 'free-backlinks-generator' ); ?></p>
 					</td>
 				</tr>
 				<tr class="fbg-autoplay-row">
@@ -242,7 +242,7 @@ function fbg_sidebar_ads_for_template() {
 	if ( empty( $all ) ) {
 		return array();
 	}
-	$mode = get_option( 'fbg_sidebar_ads_mode', 'stack' );
+	$mode = get_option( 'fbg_sidebar_ads_mode', 'slider' );
 	if ( 'random' === $mode ) {
 		return array( $all[ array_rand( $all ) ] );
 	}

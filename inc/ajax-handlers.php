@@ -185,12 +185,12 @@ function fbg_handle_post_submission() {
 
 	if ( ! $is_draft ) {
 		$word_count = fbg_count_words_html( $content );
-		if ( $word_count < 600 ) {
+		if ( $word_count < 200 ) {
 			wp_send_json_error(
 				array(
 					'message' => sprintf(
 						/* translators: %d: current word count */
-						__( 'Your post must be at least 600 words before you can submit for review. Current length: %d words.', 'free-backlinks-generator' ),
+						__( 'Your post must be at least 200 words before you can submit for review. Current length: %d words.', 'free-backlinks-generator' ),
 						$word_count
 					),
 				)

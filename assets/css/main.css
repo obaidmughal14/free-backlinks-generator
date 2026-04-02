@@ -114,8 +114,7 @@ h3 {
 
 /* Nav */
 .fbg-nav {
-	position: sticky;
-	top: 0;
+	position: relative;
 	z-index: 100;
 	transition: background 0.25s, box-shadow 0.25s;
 }
@@ -128,7 +127,7 @@ h3 {
 	box-shadow: var(--shadow-card);
 }
 .fbg-nav--inner {
-	position: sticky;
+	position: relative;
 }
 .nav-container {
 	display: flex;

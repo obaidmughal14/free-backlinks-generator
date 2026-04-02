@@ -5,12 +5,15 @@
  * @package Free_Backlinks_Generator
  */
 
-$ads       = function_exists( 'fbg_sidebar_ads_for_template' ) ? fbg_sidebar_ads_for_template() : array();
-$mode      = get_option( 'fbg_sidebar_ads_mode', 'stack' );
-$autoplay  = max( 0, (int) get_option( 'fbg_sidebar_ads_autoplay', 5 ) );
-$is_slider = count( $ads ) > 1 && 'slider' === $mode;
+$ads            = function_exists( 'fbg_sidebar_ads_for_template' ) ? fbg_sidebar_ads_for_template() : array();
+$mode           = get_option( 'fbg_sidebar_ads_mode', 'slider' );
+$autoplay       = max( 0, (int) get_option( 'fbg_sidebar_ads_autoplay', 5 ) );
+$has_ads        = ! empty( $ads );
+$use_slider     = $has_ads && 'slider' === $mode;
+$show_slider_nav = count( $ads ) > 1;
+$sidebar_class  = $has_ads ? 'fbg-post-sidebar fbg-post-sidebar--has-ads' : 'fbg-post-sidebar fbg-post-sidebar--contact-only';
 ?>
-<aside class="fbg-post-sidebar" aria-label="<?php esc_attr_e( 'Sidebar', 'free-backlinks-generator' ); ?>">
+<aside class="<?php echo esc_attr( $sidebar_class ); ?>" aria-label="<?php esc_attr_e( 'Sidebar', 'free-backlinks-generator' ); ?>">
 	<section class="fbg-sidebar-card fbg-sidebar-card--contact">
 		<h2 class="fbg-sidebar-card__title"><?php esc_html_e( 'Contact us', 'free-backlinks-generator' ); ?></h2>
 		<p class="fbg-sidebar-card__intro"><?php esc_html_e( 'Questions about guest posts or partnerships? Send a message and we will get back to you.', 'free-backlinks-generator' ); ?></p>
@@ -35,9 +38,9 @@ $is_slider = count( $ads ) > 1 && 'slider' === $mode;
 	<?php if ( ! empty( $ads ) ) : ?>
 		<section class="fbg-sidebar-card fbg-sidebar-card--ads" aria-label="<?php esc_attr_e( 'Sponsored', 'free-backlinks-generator' ); ?>">
 			<p class="fbg-sidebar-ads__label"><?php esc_html_e( 'Sponsored', 'free-backlinks-generator' ); ?></p>
-			<?php if ( $is_slider ) : ?>
+			<?php if ( $use_slider ) : ?>
 				<div class="fbg-ad-slider" data-autoplay="<?php echo esc_attr( (string) ( $autoplay * 1000 ) ); ?>">
-					<div class="fbg-ad-slider__viewport" tabindex="0">
+					<div class="fbg-ad-slider__viewport" tabindex="0" data-multiple="<?php echo $show_slider_nav ? '1' : '0'; ?>">
 							<?php
 							foreach ( $ads as $ad ) :
 								$url = get_post_meta( $ad->ID, '_fbg_ad_url', true );
@@ -55,10 +58,12 @@ $is_slider = count( $ads ) > 1 && 'slider' === $mode;
 								</div>
 							<?php endforeach; ?>
 					</div>
+					<?php if ( $show_slider_nav ) : ?>
 					<div class="fbg-ad-slider__nav">
 						<button type="button" class="fbg-ad-slider__btn fbg-ad-slider__btn--prev" aria-label="<?php esc_attr_e( 'Previous ad', 'free-backlinks-generator' ); ?>">‹</button>
 						<button type="button" class="fbg-ad-slider__btn fbg-ad-slider__btn--next" aria-label="<?php esc_attr_e( 'Next ad', 'free-backlinks-generator' ); ?>">›</button>
 					</div>
+					<?php endif; ?>
 				</div>
 			<?php else : ?>
 				<div class="fbg-ad-stack">
