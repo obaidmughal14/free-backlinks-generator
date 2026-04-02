@@ -16,15 +16,106 @@
 		);
 	}
 
+	function setupDrawer(btn, drawer) {
+		if (!btn || !drawer) return;
+
+		var panel = drawer.querySelector('.fbg-nav-drawer__panel');
+		var closers = drawer.querySelectorAll('[data-fbg-drawer-close]');
+		var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		var lastFocus = null;
+
+		function openDrawer() {
+			lastFocus = document.activeElement;
+			drawer.removeAttribute('hidden');
+			drawer.setAttribute('aria-hidden', 'false');
+			document.body.classList.add('fbg-nav-open');
+			btn.setAttribute('aria-expanded', 'true');
+			btn.setAttribute('aria-label', btn.getAttribute('data-label-close') || 'Close menu');
+			requestAnimationFrame(function () {
+				drawer.classList.add('is-open');
+			});
+			var c = drawer.querySelector('.fbg-nav-drawer__close');
+			if (c) {
+				setTimeout(function () {
+					c.focus();
+				}, reduced ? 0 : 100);
+			}
+		}
+
+		function finishClose() {
+			drawer.setAttribute('hidden', 'hidden');
+			drawer.setAttribute('aria-hidden', 'true');
+			drawer.classList.remove('is-open');
+			document.body.classList.remove('fbg-nav-open');
+			btn.setAttribute('aria-expanded', 'false');
+			btn.setAttribute('aria-label', btn.getAttribute('data-label-open') || 'Open menu');
+			if (lastFocus && typeof lastFocus.focus === 'function') {
+				lastFocus.focus();
+			}
+		}
+
+		function closeDrawer() {
+			if (drawer.hasAttribute('hidden')) {
+				document.body.classList.remove('fbg-nav-open');
+				btn.setAttribute('aria-expanded', 'false');
+				return;
+			}
+			drawer.classList.remove('is-open');
+			if (reduced || !panel) {
+				finishClose();
+				return;
+			}
+			var done = false;
+			function onEnd(e) {
+				if (e.propertyName !== 'transform' || done) return;
+				done = true;
+				panel.removeEventListener('transitionend', onEnd);
+				finishClose();
+			}
+			panel.addEventListener('transitionend', onEnd);
+			setTimeout(function () {
+				if (!done) {
+					done = true;
+					panel.removeEventListener('transitionend', onEnd);
+					finishClose();
+				}
+			}, 400);
+		}
+
+		btn.addEventListener('click', function () {
+			if (drawer.hasAttribute('hidden')) {
+				openDrawer();
+			} else {
+				closeDrawer();
+			}
+		});
+
+		closers.forEach(function (el) {
+			el.addEventListener('click', function (e) {
+				e.preventDefault();
+				closeDrawer();
+			});
+		});
+
+		drawer.querySelectorAll('a[href]').forEach(function (link) {
+			link.addEventListener('click', function () {
+				if (window.matchMedia('(max-width: 1023px)').matches) {
+					closeDrawer();
+				}
+			});
+		});
+
+		document.addEventListener('keydown', function (e) {
+			if (e.key !== 'Escape') return;
+			if (drawer.hasAttribute('hidden')) return;
+			closeDrawer();
+		});
+	}
+
 	document.querySelectorAll('.nav-hamburger').forEach(function (btn) {
 		var id = btn.getAttribute('aria-controls');
 		var drawer = id ? document.getElementById(id) : null;
-		if (!drawer) return;
-		btn.addEventListener('click', function () {
-			var open = btn.getAttribute('aria-expanded') === 'true';
-			btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-			drawer.hidden = open;
-		});
+		setupDrawer(btn, drawer);
 	});
 
 	var stats = document.getElementById('fbg-stats-bar');

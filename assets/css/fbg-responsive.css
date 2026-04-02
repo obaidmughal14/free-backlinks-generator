@@ -52,15 +52,17 @@ html {
 	padding-inline: clamp(var(--space-sm), 2vw, var(--space-md));
 }
 
-/* —— Touch targets —— */
-.nav-hamburger {
-	min-width: 2.75rem;
-	min-height: 2.75rem;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	padding: var(--space-sm);
-	box-sizing: border-box;
+/* —— Touch targets (mobile menu only — do not override desktop display:none on hamburger) —— */
+@media (max-width: 1023px) {
+	.nav-hamburger {
+		min-width: 2.75rem;
+		min-height: 2.75rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-sm);
+		box-sizing: border-box;
+	}
 }
 
 .fbg-nav-drawer__links a,

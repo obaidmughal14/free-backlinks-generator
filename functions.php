@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.1.1' );
+define( 'FBG_VERSION', '1.1.3' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -18,6 +18,7 @@ require_once FBG_DIR . '/inc/reading-affiliate.php';
 require_once FBG_DIR . '/inc/custom-post-types.php';
 require_once FBG_DIR . '/inc/user-roles.php';
 require_once FBG_DIR . '/inc/security.php';
+require_once FBG_DIR . '/inc/customizer-social.php';
 require_once FBG_DIR . '/inc/seo.php';
 require_once FBG_DIR . '/inc/ajax-handlers.php';
 require_once FBG_DIR . '/inc/sidebar-ads.php';
@@ -78,6 +79,10 @@ function fbg_enqueue_assets() {
 		null
 	);
 	wp_enqueue_style( 'fbg-main', FBG_URI . '/assets/css/main.css', array(), FBG_VERSION );
+
+	if ( is_page_template( 'page-templates/page-home.php' ) ) {
+		wp_enqueue_script( 'fbg-testimonials', FBG_URI . '/assets/js/testimonials-carousel.js', array(), FBG_VERSION, true );
+	}
 
 	if ( is_page_template( 'page-templates/page-signup.php' ) || is_page_template( 'page-templates/page-login.php' ) || is_page_template( 'page-templates/page-forgot-password.php' ) ) {
 		wp_enqueue_style( 'fbg-auth', FBG_URI . '/assets/css/auth.css', array( 'fbg-main' ), FBG_VERSION );
@@ -441,3 +446,26 @@ function fbg_maybe_install_marketing_pages() {
 	update_option( 'fbg_marketing_pages_v1', 1 );
 }
 add_action( 'admin_init', 'fbg_maybe_install_marketing_pages', 30 );
+
+/**
+ * Preconnect to font hosts (Core Web Vitals / faster font discovery).
+ *
+ * @param array<int, string|array<string, string>> $urls          URLs.
+ * @param string                                   $relation_type Relation type.
+ * @return array<int, string|array<string, string>>
+ */
+function fbg_resource_hints( $urls, $relation_type ) {
+	if ( 'preconnect' !== $relation_type ) {
+		return $urls;
+	}
+	$urls[] = array(
+		'href'        => 'https://fonts.googleapis.com',
+		'crossorigin' => 'anonymous',
+	);
+	$urls[] = array(
+		'href'        => 'https://fonts.gstatic.com',
+		'crossorigin' => 'anonymous',
+	);
+	return $urls;
+}
+add_filter( 'wp_resource_hints', 'fbg_resource_hints', 10, 2 );
