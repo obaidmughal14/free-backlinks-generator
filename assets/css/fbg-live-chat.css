@@ -27,19 +27,23 @@
 	filter: brightness(1.05);
 }
 
+/* Closed by default — [hidden] loses to display:flex in some themes; use .is-open */
 .fbg-live-chat__panel {
 	position: absolute;
 	right: 0;
 	bottom: 64px;
 	width: min(100vw - 32px, 380px);
 	max-height: min(72vh, 520px);
-	display: flex;
+	display: none;
 	flex-direction: column;
 	background: #fff;
 	border-radius: 16px;
 	box-shadow: 0 16px 48px rgba(15, 23, 42, 0.18);
 	border: 1px solid #e2e8f0;
 	overflow: hidden;
+}
+.fbg-live-chat__panel.is-open {
+	display: flex;
 }
 
 .fbg-live-chat__head {

@@ -606,6 +606,46 @@
 	text-align: left;
 }
 
+/* Contact → support ticket CTA */
+.fbg-contact-ticket-cta {
+	padding-block: var(--space-2xl);
+}
+.fbg-contact-ticket-cta__card {
+	background: linear-gradient(135deg, rgba(15, 23, 42, 0.04) 0%, rgba(19, 78, 74, 0.08) 50%, rgba(49, 46, 129, 0.06) 100%);
+	border: 1px solid rgba(15, 23, 42, 0.08);
+	box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+.fbg-contact-ticket-cta__row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-lg);
+}
+.fbg-contact-ticket-cta__text {
+	flex: 1 1 280px;
+}
+.fbg-contact-ticket-cta__title {
+	margin: 0 0 var(--space-sm);
+	font-family: var(--font-display);
+	font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+	letter-spacing: -0.02em;
+	color: var(--color-text);
+}
+.fbg-contact-ticket-cta__desc {
+	margin: 0;
+	font-size: 0.95rem;
+	line-height: 1.6;
+	color: var(--color-text-secondary);
+}
+.fbg-contact-ticket-cta__action {
+	flex: 0 0 auto;
+}
+.fbg-contact-ticket-cta__btn {
+	white-space: nowrap;
+	box-shadow: 0 4px 14px rgba(19, 78, 74, 0.35);
+}
+
 /* Support ticket form (contact page) */
 .fbg-ticket-section {
 	padding-block: var(--space-2xl);

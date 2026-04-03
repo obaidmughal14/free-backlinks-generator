@@ -1,0 +1,109 @@
+/* Create support ticket page */
+.fbg-ticket-page__hero {
+	background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 45%, #134e4a 100%);
+	color: #fff;
+	padding-block: var(--space-2xl);
+}
+.fbg-ticket-page__hero .fbg-mkt-hero__lead {
+	color: rgba(255, 255, 255, 0.88);
+}
+.fbg-ticket-page__eyebrow {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.65);
+	margin: 0 0 var(--space-sm);
+}
+.fbg-ticket-page__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+	margin: var(--space-lg) 0 0;
+	padding: 0;
+	list-style: none;
+}
+.fbg-ticket-page__pill {
+	display: inline-block;
+	padding: 6px 12px;
+	border-radius: var(--radius-pill);
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+.fbg-ticket-page__visual {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.fbg-ticket-page__hero-icon {
+	width: min(200px, 50vw);
+	height: auto;
+	filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.35));
+}
+.fbg-ticket-page__body {
+	padding-block: var(--space-2xl);
+}
+.fbg-ticket-page__shell {
+	max-width: 40rem;
+	margin: 0 auto;
+	padding: var(--space-xl);
+	background: var(--color-surface, #fff);
+	border-radius: var(--radius-lg, 16px);
+	border: 1px solid var(--color-border, #e2e8f0);
+	box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+.fbg-ticket-page__account-note {
+	padding: var(--space-md) var(--space-lg);
+	background: linear-gradient(135deg, rgba(13, 148, 136, 0.08), rgba(99, 102, 241, 0.08));
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	margin-bottom: var(--space-lg);
+	font-size: 0.95rem;
+	line-height: 1.55;
+	color: var(--color-text-secondary);
+}
+.fbg-ticket-page__account-note strong {
+	display: block;
+	color: var(--color-primary, #0f172a);
+	margin-bottom: 4px;
+}
+.fbg-ticket-page__grid2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-md);
+}
+@media (max-width: 600px) {
+	.fbg-ticket-page__grid2 {
+		grid-template-columns: 1fr;
+	}
+}
+.fbg-ticket-page__input,
+.fbg-ticket-page__textarea {
+	width: 100%;
+	box-sizing: border-box;
+	border-radius: var(--radius-md);
+	border: 1px solid var(--color-border);
+	padding: 10px 14px;
+	font: inherit;
+}
+.fbg-ticket-page__textarea {
+	min-height: 180px;
+	resize: vertical;
+	line-height: 1.55;
+}
+.fbg-ticket-page__submit-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-md);
+	margin-top: var(--space-lg);
+}
+.fbg-ticket-page__submit {
+	padding: 12px 28px;
+	font-size: 1rem;
+}
+.fbg-ticket-page__feedback {
+	margin-top: var(--space-md);
+}

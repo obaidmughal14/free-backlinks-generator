@@ -637,7 +637,7 @@ function fbg_chat_render_widget() {
 			<span class="fbg-live-chat__toggle-icon" aria-hidden="true">💬</span>
 			<span class="screen-reader-text"><?php esc_html_e( 'Open live chat', 'free-backlinks-generator' ); ?></span>
 		</button>
-		<div class="fbg-live-chat__panel" id="fbg-live-chat-panel" role="dialog" aria-label="<?php esc_attr_e( 'Live support chat', 'free-backlinks-generator' ); ?>" hidden>
+		<div class="fbg-live-chat__panel" id="fbg-live-chat-panel" role="dialog" aria-label="<?php esc_attr_e( 'Live support chat', 'free-backlinks-generator' ); ?>" aria-hidden="true">
 			<header class="fbg-live-chat__head">
 				<strong class="fbg-live-chat__title"><?php esc_html_e( 'Live support', 'free-backlinks-generator' ); ?></strong>
 				<button type="button" class="fbg-live-chat__close" id="fbg-live-chat-close" aria-label="<?php esc_attr_e( 'Close', 'free-backlinks-generator' ); ?>">×</button>

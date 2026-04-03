@@ -651,6 +651,43 @@ function fbg_send_affiliate_rejected_email( $user ) {
 }
 
 /**
+ * Ask applicant for clarification or more detail (stays in queue).
+ *
+ * @param string $to_email       Applicant email.
+ * @param string $display_name   Display or first name (may be empty).
+ * @param string $admin_message  Note from admin (plain text).
+ */
+function fbg_send_affiliate_reconsideration_email( $to_email, $display_name, $admin_message ) {
+	if ( ! is_email( $to_email ) || '' === trim( (string) $admin_message ) ) {
+		return;
+	}
+	$name = '' !== trim( (string) $display_name ) ? $display_name : __( 'there', 'free-backlinks-generator' );
+	$blog = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+	$subj = sprintf(
+		/* translators: %s site name */
+		__( '[%s] More information needed for your affiliate application', 'free-backlinks-generator' ),
+		$blog
+	);
+	$msg_html = '<p style="margin:0 0 16px;white-space:pre-wrap;">' . esc_html( $admin_message ) . '</p>';
+	$html     = fbg_email_html_layout(
+		__( 'We need a bit more information', 'free-backlinks-generator' ),
+		__( 'Affiliate application follow-up', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 16px;">' . sprintf(
+			/* translators: %s recipient name or "there" */
+			esc_html__( 'Hi %s,', 'free-backlinks-generator' ),
+			esc_html( $name )
+		) . '</p>'
+		. '<p style="margin:0 0 16px;">' . esc_html__( 'Thanks for applying to our affiliate program. Before we can proceed, please read the note from our team below and follow up as described.', 'free-backlinks-generator' ) . '</p>'
+		. $msg_html
+		. '<p style="margin:0;font-size:14px;color:#64748b;">' . esc_html__( 'If you have questions, you can reach us through the Contact page on the website.', 'free-backlinks-generator' ) . '</p>',
+		__( 'Visit the site', 'free-backlinks-generator' ),
+		home_url( '/' ),
+		null
+	);
+	fbg_wp_mail_html( $to_email, $subj, $html );
+}
+
+/**
  * Niches for forms.
  *
  * @return array<string, string>

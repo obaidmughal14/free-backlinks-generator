@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.2.3' );
+define( 'FBG_VERSION', '1.3.1' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -78,6 +78,7 @@ function fbg_marketing_page_templates() {
 		'page-templates/page-privacy-policy.php',
 		'page-templates/page-terms-of-service.php',
 		'page-templates/page-sitemap.php',
+		'page-templates/page-create-ticket.php',
 	);
 }
 
@@ -233,7 +234,8 @@ function fbg_enqueue_assets() {
 		);
 	}
 
-	if ( is_page_template( 'page-templates/page-contact.php' ) ) {
+	if ( is_page_template( 'page-templates/page-create-ticket.php' ) ) {
+		wp_enqueue_style( 'fbg-ticket-page', FBG_URI . '/assets/css/fbg-ticket-page.css', array( 'fbg-marketing', 'fbg-main' ), FBG_VERSION );
 		wp_enqueue_script(
 			'fbg-support-tickets-public',
 			FBG_URI . '/assets/js/fbg-support-tickets-public.js',
@@ -396,6 +398,11 @@ function fbg_theme_activation() {
 			'template' => 'page-templates/page-contact.php',
 		),
 		array(
+			'title'    => 'Support ticket',
+			'slug'     => 'support-ticket',
+			'template' => 'page-templates/page-create-ticket.php',
+		),
+		array(
 			'title'    => 'Privacy Policy',
 			'slug'     => 'privacy-policy',
 			'template' => 'page-templates/page-privacy-policy.php',
@@ -484,6 +491,41 @@ function fbg_maybe_upgrade_support_tables() {
 	update_option( 'fbg_support_db_v', 1 );
 }
 add_action( 'after_setup_theme', 'fbg_maybe_upgrade_support_tables', 20 );
+
+/**
+ * Create Support ticket page if missing (one-time flag).
+ */
+function fbg_maybe_create_support_ticket_page() {
+	$existing = get_page_by_path( 'support-ticket' );
+	if ( $existing ) {
+		$pid = (int) $existing->ID;
+		$tpl = (string) get_post_meta( $pid, '_wp_page_template', true );
+		if ( 'page-templates/page-create-ticket.php' !== $tpl ) {
+			update_post_meta( $pid, '_wp_page_template', 'page-templates/page-create-ticket.php' );
+		}
+		if ( ! get_option( 'fbg_support_ticket_page_created' ) ) {
+			update_option( 'fbg_support_ticket_page_created', '1' );
+		}
+		return;
+	}
+	if ( get_option( 'fbg_support_ticket_page_created' ) ) {
+		return;
+	}
+	$post_id = wp_insert_post(
+		array(
+			'post_title'   => __( 'Support ticket', 'free-backlinks-generator' ),
+			'post_name'    => 'support-ticket',
+			'post_status'  => 'publish',
+			'post_type'    => 'page',
+			'post_content' => '',
+		)
+	);
+	if ( $post_id && ! is_wp_error( $post_id ) ) {
+		update_post_meta( (int) $post_id, '_wp_page_template', 'page-templates/page-create-ticket.php' );
+	}
+	update_option( 'fbg_support_ticket_page_created', '1' );
+}
+add_action( 'after_setup_theme', 'fbg_maybe_create_support_ticket_page', 25 );
 
 /**
  * Assign templates to core internal pages, create Blog / HTML sitemap if missing, set posts page (one-time).

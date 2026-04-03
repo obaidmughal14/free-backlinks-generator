@@ -9,7 +9,8 @@ get_header();
 $mail = antispambot( get_option( 'admin_email' ) );
 $ill  = get_theme_file_uri( 'assets/images/hero-illustration.svg' );
 $icon = get_theme_file_uri( 'assets/images/icon-posts.svg' );
-$cu   = is_user_logged_in() ? wp_get_current_user() : null;
+$ticket_page = get_page_by_path( 'support-ticket' );
+$ticket_url  = $ticket_page ? get_permalink( $ticket_page ) : home_url( '/support-ticket/' );
 ?>
 <main id="main-content" class="fbg-main">
 	<section class="fbg-mkt-hero fbg-mkt-hero--split" aria-labelledby="fbg-contact-title">
@@ -62,57 +63,17 @@ $cu   = is_user_logged_in() ? wp_get_current_user() : null;
 		</div>
 	</section>
 
-	<section class="fbg-mkt-section fbg-container fbg-ticket-section" id="support-ticket">
-		<div class="fbg-sidebar-card fbg-sidebar-card--contact fbg-ticket-section__card">
-			<h2 class="fbg-sidebar-card__title"><?php esc_html_e( 'Create a support ticket', 'free-backlinks-generator' ); ?></h2>
-			<p class="fbg-sidebar-card__intro"><?php esc_html_e( 'For account issues, billing, technical problems, or moderation appeals, open a tracked ticket. You will receive a reference number (e.g. FBG-12) by email.', 'free-backlinks-generator' ); ?></p>
-			<form id="fbg-support-ticket-form" class="fbg-aff-form fbg-ticket-form" novalidate>
-				<?php if ( $cu ) : ?>
-					<input type="hidden" name="requester_name" value="<?php echo esc_attr( $cu->display_name ); ?>">
-					<input type="hidden" name="requester_email" value="<?php echo esc_attr( $cu->user_email ); ?>">
-					<p class="fbg-ticket-form__logged"><?php esc_html_e( 'You are logged in — we will use your account name and email.', 'free-backlinks-generator' ); ?></p>
-				<?php else : ?>
-					<div class="fbg-field">
-						<label for="fbg-ticket-name"><?php esc_html_e( 'Your name', 'free-backlinks-generator' ); ?></label>
-						<input type="text" id="fbg-ticket-name" name="requester_name" required maxlength="190" autocomplete="name">
-					</div>
-					<div class="fbg-field">
-						<label for="fbg-ticket-email"><?php esc_html_e( 'Email', 'free-backlinks-generator' ); ?></label>
-						<input type="email" id="fbg-ticket-email" name="requester_email" required autocomplete="email">
-					</div>
-				<?php endif; ?>
-				<div class="fbg-field">
-					<label for="fbg-ticket-subject"><?php esc_html_e( 'Subject', 'free-backlinks-generator' ); ?></label>
-					<input type="text" id="fbg-ticket-subject" name="subject" required maxlength="255" placeholder="<?php esc_attr_e( 'Short summary of the issue', 'free-backlinks-generator' ); ?>">
+	<section class="fbg-mkt-section fbg-container fbg-contact-ticket-cta">
+		<div class="fbg-mkt-card fbg-contact-ticket-cta__card">
+			<div class="fbg-contact-ticket-cta__row">
+				<div class="fbg-contact-ticket-cta__text">
+					<h2 class="fbg-contact-ticket-cta__title"><?php esc_html_e( 'Need a tracked request?', 'free-backlinks-generator' ); ?></h2>
+					<p class="fbg-contact-ticket-cta__desc"><?php esc_html_e( 'For billing, technical issues, or moderation appeals, open a support ticket. You will receive a reference number (e.g. FBG-12) and updates by email.', 'free-backlinks-generator' ); ?></p>
 				</div>
-				<div class="fbg-field fbg-field--inline">
-					<label for="fbg-ticket-category"><?php esc_html_e( 'Category', 'free-backlinks-generator' ); ?></label>
-					<select id="fbg-ticket-category" name="category" required>
-						<option value="general"><?php esc_html_e( 'General', 'free-backlinks-generator' ); ?></option>
-						<option value="account"><?php esc_html_e( 'Account & login', 'free-backlinks-generator' ); ?></option>
-						<option value="billing"><?php esc_html_e( 'Billing / payouts', 'free-backlinks-generator' ); ?></option>
-						<option value="technical"><?php esc_html_e( 'Technical / bug', 'free-backlinks-generator' ); ?></option>
-						<option value="moderation"><?php esc_html_e( 'Moderation / appeal', 'free-backlinks-generator' ); ?></option>
-						<option value="partnership"><?php esc_html_e( 'Partnership / press', 'free-backlinks-generator' ); ?></option>
-						<option value="other"><?php esc_html_e( 'Other', 'free-backlinks-generator' ); ?></option>
-					</select>
+				<div class="fbg-contact-ticket-cta__action">
+					<a class="btn-primary fbg-contact-ticket-cta__btn" href="<?php echo esc_url( $ticket_url ); ?>"><?php esc_html_e( 'Create a support ticket', 'free-backlinks-generator' ); ?> →</a>
 				</div>
-				<div class="fbg-field fbg-field--inline">
-					<label for="fbg-ticket-priority"><?php esc_html_e( 'Priority', 'free-backlinks-generator' ); ?></label>
-					<select id="fbg-ticket-priority" name="priority" required>
-						<option value="low"><?php esc_html_e( 'Low', 'free-backlinks-generator' ); ?></option>
-						<option value="normal" selected><?php esc_html_e( 'Normal', 'free-backlinks-generator' ); ?></option>
-						<option value="high"><?php esc_html_e( 'High', 'free-backlinks-generator' ); ?></option>
-						<option value="urgent"><?php esc_html_e( 'Urgent', 'free-backlinks-generator' ); ?></option>
-					</select>
-				</div>
-				<div class="fbg-field">
-					<label for="fbg-ticket-body"><?php esc_html_e( 'Describe the issue', 'free-backlinks-generator' ); ?></label>
-					<textarea id="fbg-ticket-body" name="body" required rows="6" maxlength="8000" placeholder="<?php esc_attr_e( 'Include steps to reproduce, links, and what you expected to happen.', 'free-backlinks-generator' ); ?>"></textarea>
-				</div>
-				<button type="submit" class="btn-primary" id="fbg-support-ticket-submit"><?php esc_html_e( 'Submit ticket', 'free-backlinks-generator' ); ?></button>
-				<div id="fbg-support-ticket-feedback" class="fbg-ticket-form__feedback" hidden role="status"></div>
-			</form>
+			</div>
 		</div>
 	</section>
 

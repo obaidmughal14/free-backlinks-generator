@@ -21,6 +21,33 @@
 	margin-bottom: 4px;
 }
 
+.fbg-aff-admin .fbg-aff-actions-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 0;
+	margin-bottom: 8px;
+}
+
+.fbg-aff-admin .fbg-aff-inline-form {
+	display: inline;
+	margin: 0 4px 4px 0;
+}
+
+.fbg-aff-admin .fbg-aff-reconsider {
+	margin-top: 4px;
+	padding-top: 10px;
+	border-top: 1px solid #c3c4c7;
+	max-width: 400px;
+}
+
+.fbg-aff-admin .fbg-aff-reconsider textarea {
+	width: 100%;
+	max-width: 100%;
+	margin-bottom: 6px;
+	font-size: 13px;
+}
+
 .fbg-aff-admin .fbg-aff-details {
 	margin-top: 8px;
 	max-width: 320px;

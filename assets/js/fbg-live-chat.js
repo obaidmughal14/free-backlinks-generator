@@ -42,6 +42,10 @@
 	var nameIn = el('fbg-live-chat-name');
 	var emailIn = el('fbg-live-chat-email');
 
+	if (!toggle || !panel) {
+		return;
+	}
+
 	var sessionId = 0;
 	var suggested = root.getAttribute('data-user-key') || '';
 	var gkey = suggested.length >= 2 ? suggested : guestKey();
@@ -137,89 +141,125 @@
 	}
 
 	function openPanel() {
-		panel.hidden = false;
+		panel.classList.add('is-open');
+		panel.setAttribute('aria-hidden', 'false');
 		toggle.setAttribute('aria-expanded', 'true');
 	}
 
 	function closePanel() {
-		panel.hidden = true;
+		panel.classList.remove('is-open');
+		panel.setAttribute('aria-hidden', 'true');
 		toggle.setAttribute('aria-expanded', 'false');
 	}
 
-	toggle.addEventListener('click', function () {
-		if (panel.hidden) {
-			openPanel();
-		} else {
+	function panelIsOpen() {
+		return panel.classList.contains('is-open');
+	}
+
+	toggle.addEventListener('click', function (e) {
+		e.stopPropagation();
+		if (panelIsOpen()) {
 			closePanel();
+		} else {
+			openPanel();
 		}
-	});
-	closeBtn.addEventListener('click', closePanel);
-
-	startBtn.addEventListener('click', function () {
-		var name = loggedIn ? '' : (nameIn && nameIn.value ? nameIn.value.trim() : '');
-		var email = loggedIn ? '' : (emailIn && emailIn.value ? emailIn.value.trim() : '');
-		if (!loggedIn && name.length < 2) {
-			setStatus(str('name', 'Name') + ' required');
-			return;
-		}
-		setStatus(str('connecting', '…'));
-		startBtn.disabled = true;
-		post('fbg_chat_init', {
-			guest_key: gkey,
-			visitor_name: name,
-			visitor_email: email,
-		})
-			.then(function (json) {
-				startBtn.disabled = false;
-				if (!json || !json.success) {
-					setStatus((json && json.data && json.data.message) || str('error', 'Error'));
-					return;
-				}
-				var d = json.data;
-				sessionId = d.session_id;
-				gkey = d.guest_key || gkey;
-				preform.hidden = true;
-				thread.hidden = false;
-				composer.hidden = false;
-				thread.innerHTML = '';
-				afterId = 0;
-				if (d.messages && d.messages.length) {
-					d.messages.forEach(appendMsg);
-				}
-				if (!d.agent_online) {
-					setStatus(str('offline', ''));
-				} else {
-					setStatus('');
-				}
-				startPoll();
-				poll();
-			})
-			.catch(function () {
-				startBtn.disabled = false;
-				setStatus(str('error', 'Error'));
-			});
 	});
 
-	sendBtn.addEventListener('click', function () {
-		var text = input.value.trim();
-		if (!text || !sessionId) {
+	if (closeBtn) {
+		closeBtn.addEventListener('click', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			closePanel();
+		});
+	}
+
+	document.addEventListener('click', function (e) {
+		if (!panelIsOpen()) {
 			return;
 		}
-		sendBtn.disabled = true;
-		post('fbg_chat_send_visitor', {
-			session_id: String(sessionId),
-			guest_key: gkey,
-			message: text,
-		})
-			.then(function (json) {
-				sendBtn.disabled = false;
-				if (json && json.success && json.data && json.data.message) {
-					appendMsg(json.data.message);
-					input.value = '';
-				}
-			})
-			.catch(function () {
-				sendBtn.disabled = false;
-			});
+		if (root.contains(e.target)) {
+			return;
+		}
+		closePanel();
 	});
+
+	if (startBtn) {
+		startBtn.addEventListener('click', function () {
+			var name = loggedIn ? '' : (nameIn && nameIn.value ? nameIn.value.trim() : '');
+			var email = loggedIn ? '' : (emailIn && emailIn.value ? emailIn.value.trim() : '');
+			if (!loggedIn && name.length < 2) {
+				setStatus(str('name', 'Name') + ' required');
+				return;
+			}
+			setStatus(str('connecting', '…'));
+			startBtn.disabled = true;
+			post('fbg_chat_init', {
+				guest_key: gkey,
+				visitor_name: name,
+				visitor_email: email,
+			})
+				.then(function (json) {
+					startBtn.disabled = false;
+					if (!json || !json.success) {
+						setStatus((json && json.data && json.data.message) || str('error', 'Error'));
+						return;
+					}
+					var d = json.data;
+					sessionId = d.session_id;
+					gkey = d.guest_key || gkey;
+					if (preform) {
+						preform.hidden = true;
+					}
+					if (thread) {
+						thread.hidden = false;
+						thread.innerHTML = '';
+					}
+					if (composer) {
+						composer.hidden = false;
+					}
+					afterId = 0;
+					if (d.messages && d.messages.length) {
+						d.messages.forEach(appendMsg);
+					}
+					if (!d.agent_online) {
+						setStatus(str('offline', ''));
+					} else {
+						setStatus('');
+					}
+					startPoll();
+					poll();
+				})
+				.catch(function () {
+					startBtn.disabled = false;
+					setStatus(str('error', 'Error'));
+				});
+		});
+	}
+
+	if (sendBtn) {
+		sendBtn.addEventListener('click', function () {
+			var text = input ? input.value.trim() : '';
+			if (!text || !sessionId) {
+				return;
+			}
+			sendBtn.disabled = true;
+			post('fbg_chat_send_visitor', {
+				session_id: String(sessionId),
+				guest_key: gkey,
+				message: text,
+			})
+				.then(function (json) {
+					sendBtn.disabled = false;
+					if (json && json.success && json.data && json.data.message) {
+						appendMsg(json.data.message);
+						if (input) {
+							input.value = '';
+						}
+					}
+				})
+				.catch(function () {
+					sendBtn.disabled = false;
+				});
+		});
+	}
 })();

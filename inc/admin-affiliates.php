@@ -113,7 +113,7 @@ function fbg_affiliate_admin_handle_post() {
 
 	$action       = sanitize_key( wp_unslash( $_POST['fbg_aff_action'] ) );
 	$redirect_tab = 'partners';
-	if ( in_array( $action, array( 'approve_lead', 'dismiss_lead', 'reject_lead' ), true ) ) {
+	if ( in_array( $action, array( 'approve_lead', 'dismiss_lead', 'reject_lead', 'reconsider_lead' ), true ) ) {
 		$redirect_tab = 'applications';
 	} elseif ( 'add_partner' === $action ) {
 		$posted_tab = isset( $_POST['fbg_aff_tab'] ) ? sanitize_key( wp_unslash( $_POST['fbg_aff_tab'] ) ) : 'add';
@@ -279,6 +279,48 @@ function fbg_affiliate_admin_handle_post() {
 			}
 			break;
 
+		case 'reconsider_lead':
+			$idx   = isset( $_POST['lead_index'] ) ? absint( $_POST['lead_index'] ) : 99999;
+			$leads = get_option( 'fbg_affiliate_leads', array() );
+			if ( ! is_array( $leads ) || ! isset( $leads[ $idx ] ) ) {
+				$args['fbg_aff_err'] = 'lead_missing';
+				break;
+			}
+			$lead = $leads[ $idx ];
+			$em   = isset( $lead['email'] ) ? sanitize_email( $lead['email'] ) : '';
+			if ( ! is_email( $em ) ) {
+				$args['fbg_aff_err'] = 'reconsider_no_email';
+				break;
+			}
+			$msg = isset( $_POST['reconsider_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['reconsider_message'] ) ) : '';
+			if ( strlen( $msg ) < 15 ) {
+				$args['fbg_aff_err'] = 'reconsider_short';
+				break;
+			}
+			$disp = isset( $lead['name'] ) ? (string) $lead['name'] : '';
+			if ( function_exists( 'fbg_send_affiliate_reconsideration_email' ) ) {
+				fbg_send_affiliate_reconsideration_email( $em, $disp, $msg );
+			}
+			$uid  = isset( $lead['user_id'] ) ? absint( $lead['user_id'] ) : 0;
+			$user = $uid ? get_userdata( $uid ) : get_user_by( 'email', $em );
+			if ( $user ) {
+				update_user_meta( $user->ID, '_fbg_affiliate_app_status', 'needs_info' );
+				if ( function_exists( 'fbg_create_notification' ) ) {
+					fbg_create_notification(
+						$user->ID,
+						'affiliate_needs_info',
+						sprintf(
+							/* translators: %s admin message excerpt */
+							__( 'Your affiliate application needs more information: %s', 'free-backlinks-generator' ),
+							wp_trim_words( $msg, 24 )
+						),
+						null
+					);
+				}
+			}
+			$args['fbg_aff_ok'] = 'lead_reconsider';
+			break;
+
 		default:
 			break;
 	}
@@ -320,6 +362,7 @@ function fbg_render_affiliate_admin_page() {
 			'lead_approved'    => __( 'Application approved. The applicant was emailed with approval details and a link to set their password.', 'free-backlinks-generator' ),
 			'lead_rejected'    => __( 'Application rejected. The applicant was notified by email.', 'free-backlinks-generator' ),
 			'lead_dismissed'   => __( 'Application removed from the queue (no rejection email sent).', 'free-backlinks-generator' ),
+			'lead_reconsider'  => __( 'Reconsideration request sent by email. The application remains in the queue.', 'free-backlinks-generator' ),
 		);
 		if ( isset( $messages[ $ok ] ) ) {
 			printf( '<div class="notice notice-success is-dismissible"><p>%s</p></div>', esc_html( $messages[ $ok ] ) );
@@ -332,6 +375,8 @@ function fbg_render_affiliate_admin_page() {
 			'warn_invalid'    => __( 'Enter a warning message (at least 3 characters).', 'free-backlinks-generator' ),
 			'lead_missing'    => __( 'That application row no longer exists.', 'free-backlinks-generator' ),
 			'lead_no_wp_user' => __( 'No WordPress account uses that email. Create the user first or add them manually on the Add tab.', 'free-backlinks-generator' ),
+			'reconsider_short' => __( 'Enter a reconsideration message (at least 15 characters).', 'free-backlinks-generator' ),
+			'reconsider_no_email' => __( 'This row has no valid email address.', 'free-backlinks-generator' ),
 		);
 		if ( isset( $errors[ $err ] ) ) {
 			printf( '<div class="notice notice-error is-dismissible"><p>%s</p></div>', esc_html( $errors[ $err ] ) );
@@ -342,7 +387,7 @@ function fbg_render_affiliate_admin_page() {
 	?>
 	<div class="wrap fbg-aff-admin">
 		<h1><?php esc_html_e( 'Affiliate Program', 'free-backlinks-generator' ); ?></h1>
-		<p class="description"><?php esc_html_e( 'Partner applications create (or update) a member account. Approve to activate the program and email a password link; reject to notify the applicant. Only approved partners earn new referral credit.', 'free-backlinks-generator' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Partner applications create (or update) a member account. Use Contact to open your mail client, Approve to activate and email a password link, Reject to notify the applicant, Request reconsideration to email without removing the row, or Dismiss to remove the row quietly. Only approved partners earn new referral credit.', 'free-backlinks-generator' ); ?></p>
 
 		<h2 class="nav-tab-wrapper wp-clearfix">
 			<a href="<?php echo esc_url( add_query_arg( 'tab', 'partners', $base ) ); ?>" class="nav-tab <?php echo 'partners' === $tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Active partners', 'free-backlinks-generator' ); ?></a>
@@ -563,6 +608,12 @@ function fbg_aff_admin_tab_applications() {
 					$em    = isset( $lead['email'] ) ? sanitize_email( $lead['email'] ) : '';
 					$wp_u  = is_email( $em ) ? get_user_by( 'email', $em ) : false;
 					$ts    = isset( $lead['ts'] ) ? (int) $lead['ts'] : 0;
+					$mail_subj = sprintf(
+						/* translators: %s site name */
+						__( 'Affiliate program — %s', 'free-backlinks-generator' ),
+						wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
+					);
+					$mailto    = is_email( $em ) ? 'mailto:' . $em . '?subject=' . rawurlencode( $mail_subj ) : '';
 					?>
 					<tr>
 						<td><?php echo esc_html( $ts ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $ts ) : '—' ); ?></td>
@@ -579,29 +630,47 @@ function fbg_aff_admin_tab_applications() {
 							?>
 						</td>
 						<td class="fbg-aff-actions">
-							<?php if ( $wp_u ) : ?>
-								<form method="post" style="display:inline;">
+							<div class="fbg-aff-actions-row">
+								<?php if ( $mailto ) : ?>
+									<a class="button button-small" href="<?php echo esc_url( $mailto ); ?>"><?php esc_html_e( 'Contact', 'free-backlinks-generator' ); ?></a>
+								<?php endif; ?>
+								<?php if ( $wp_u ) : ?>
+									<form method="post" class="fbg-aff-inline-form">
+										<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
+										<input type="hidden" name="fbg_aff_action" value="approve_lead">
+										<input type="hidden" name="fbg_aff_tab" value="applications">
+										<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
+										<button type="submit" class="button button-small button-primary"><?php esc_html_e( 'Approve', 'free-backlinks-generator' ); ?></button>
+									</form>
+									<form method="post" class="fbg-aff-inline-form" onsubmit="return confirm('<?php echo esc_js( __( 'Reject this application? The applicant will receive an email.', 'free-backlinks-generator' ) ); ?>');">
+										<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
+										<input type="hidden" name="fbg_aff_action" value="reject_lead">
+										<input type="hidden" name="fbg_aff_tab" value="applications">
+										<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
+										<button type="submit" class="button button-small"><?php esc_html_e( 'Reject', 'free-backlinks-generator' ); ?></button>
+									</form>
+								<?php endif; ?>
+								<form method="post" class="fbg-aff-inline-form" onsubmit="return confirm('<?php echo esc_js( __( 'Remove from the list without sending an email?', 'free-backlinks-generator' ) ); ?>');">
 									<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
-									<input type="hidden" name="fbg_aff_action" value="approve_lead">
+									<input type="hidden" name="fbg_aff_action" value="dismiss_lead">
 									<input type="hidden" name="fbg_aff_tab" value="applications">
 									<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
-									<button type="submit" class="button button-small button-primary"><?php esc_html_e( 'Approve', 'free-backlinks-generator' ); ?></button>
+									<button type="submit" class="button button-small"><?php esc_html_e( 'Dismiss', 'free-backlinks-generator' ); ?></button>
 								</form>
-								<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Reject this application? The applicant will receive an email.', 'free-backlinks-generator' ) ); ?>');">
-									<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
-									<input type="hidden" name="fbg_aff_action" value="reject_lead">
-									<input type="hidden" name="fbg_aff_tab" value="applications">
-									<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
-									<button type="submit" class="button button-small"><?php esc_html_e( 'Reject', 'free-backlinks-generator' ); ?></button>
-								</form>
+							</div>
+							<?php if ( is_email( $em ) ) : ?>
+								<div class="fbg-aff-reconsider">
+									<form method="post" class="fbg-aff-reconsider-form">
+										<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
+										<input type="hidden" name="fbg_aff_action" value="reconsider_lead">
+										<input type="hidden" name="fbg_aff_tab" value="applications">
+										<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
+										<label class="screen-reader-text" for="fbg-reconsider-<?php echo esc_attr( (string) $idx ); ?>"><?php esc_html_e( 'Message to applicant', 'free-backlinks-generator' ); ?></label>
+										<textarea id="fbg-reconsider-<?php echo esc_attr( (string) $idx ); ?>" name="reconsider_message" rows="3" class="large-text" placeholder="<?php echo esc_attr__( 'Request more detail, clarification, or documents… (email sent to applicant; row stays in queue)', 'free-backlinks-generator' ); ?>" required minlength="15"></textarea>
+										<p><button type="submit" class="button button-small"><?php esc_html_e( 'Request reconsideration', 'free-backlinks-generator' ); ?></button></p>
+									</form>
+								</div>
 							<?php endif; ?>
-							<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Remove from the list without sending an email?', 'free-backlinks-generator' ) ); ?>');">
-								<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
-								<input type="hidden" name="fbg_aff_action" value="dismiss_lead">
-								<input type="hidden" name="fbg_aff_tab" value="applications">
-								<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
-								<button type="submit" class="button button-small"><?php esc_html_e( 'Dismiss', 'free-backlinks-generator' ); ?></button>
-							</form>
 							<?php if ( isset( $lead['plan'] ) && (string) $lead['plan'] !== '' ) : ?>
 								<details class="fbg-aff-details">
 									<summary><?php esc_html_e( 'Promotion plan', 'free-backlinks-generator' ); ?></summary>
