@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.3.1' );
+define( 'FBG_VERSION', '1.3.2' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
