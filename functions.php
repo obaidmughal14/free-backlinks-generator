@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.1.7' );
+define( 'FBG_VERSION', '1.2.1' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -23,6 +23,8 @@ require_once FBG_DIR . '/inc/customizer-theme-options.php';
 require_once FBG_DIR . '/inc/menu-fallbacks.php';
 require_once FBG_DIR . '/inc/testimonials-cpt.php';
 require_once FBG_DIR . '/inc/seo.php';
+require_once FBG_DIR . '/inc/legal-static.php';
+require_once FBG_DIR . '/inc/feed-sitemap.php';
 require_once FBG_DIR . '/inc/ajax-handlers.php';
 require_once FBG_DIR . '/inc/sidebar-ads.php';
 if ( is_admin() ) {
@@ -55,6 +57,26 @@ function fbg_theme_setup() {
 	add_image_size( 'fbg_sidebar_ad', 300, 600, true );
 }
 add_action( 'after_setup_theme', 'fbg_theme_setup' );
+
+/**
+ * Page templates that load marketing CSS (internal landing / legal layouts).
+ *
+ * @return string[]
+ */
+function fbg_marketing_page_templates() {
+	return array(
+		'page-templates/page-affiliate-program.php',
+		'page-templates/page-cookie-policy.php',
+		'page-templates/page-gdpr-notice.php',
+		'page-templates/page-about.php',
+		'page-templates/page-contact.php',
+		'page-templates/page-how-it-works.php',
+		'page-templates/page-community-guidelines.php',
+		'page-templates/page-privacy-policy.php',
+		'page-templates/page-terms-of-service.php',
+		'page-templates/page-sitemap.php',
+	);
+}
 
 /**
  * Widget areas.
@@ -184,15 +206,7 @@ function fbg_enqueue_assets() {
 		}
 	}
 
-	if (
-		is_page_template(
-			array(
-				'page-templates/page-affiliate-program.php',
-				'page-templates/page-cookie-policy.php',
-				'page-templates/page-gdpr-notice.php',
-			)
-		)
-	) {
+	if ( is_page_template( fbg_marketing_page_templates() ) ) {
 		wp_enqueue_style( 'fbg-marketing', FBG_URI . '/assets/css/fbg-marketing.css', array( 'fbg-main' ), FBG_VERSION );
 	}
 
@@ -223,15 +237,7 @@ function fbg_enqueue_assets() {
 	if ( is_post_type_archive( 'fbg_post' ) || is_home() || is_singular( 'fbg_post' ) ) {
 		$resp_deps[] = 'fbg-blog';
 	}
-	if (
-		is_page_template(
-			array(
-				'page-templates/page-affiliate-program.php',
-				'page-templates/page-cookie-policy.php',
-				'page-templates/page-gdpr-notice.php',
-			)
-		)
-	) {
+	if ( is_page_template( fbg_marketing_page_templates() ) ) {
 		$resp_deps[] = 'fbg-marketing';
 	}
 	wp_enqueue_style( 'fbg-responsive', FBG_URI . '/assets/css/fbg-responsive.css', $resp_deps, FBG_VERSION );
@@ -275,15 +281,7 @@ function fbg_body_class( $classes ) {
 	if ( is_page_template( 'page-templates/page-submit-post.php' ) ) {
 		$classes[] = 'fbg-submit-page';
 	}
-	if (
-		is_page_template(
-			array(
-				'page-templates/page-affiliate-program.php',
-				'page-templates/page-cookie-policy.php',
-				'page-templates/page-gdpr-notice.php',
-			)
-		)
-	) {
+	if ( is_page_template( fbg_marketing_page_templates() ) ) {
 		$classes[] = 'fbg-marketing-page';
 	}
 	return $classes;
@@ -339,28 +337,43 @@ function fbg_theme_activation() {
 			'template' => 'page-templates/page-submit-post.php',
 		),
 		array(
-			'title' => 'About',
-			'slug'  => 'about',
+			'title'    => 'About',
+			'slug'     => 'about',
+			'template' => 'page-templates/page-about.php',
 		),
 		array(
-			'title' => 'How It Works',
-			'slug'  => 'how-it-works',
+			'title'    => 'How It Works',
+			'slug'     => 'how-it-works',
+			'template' => 'page-templates/page-how-it-works.php',
 		),
 		array(
-			'title' => 'Community Guidelines',
-			'slug'  => 'community-guidelines',
+			'title'    => 'Community Guidelines',
+			'slug'     => 'community-guidelines',
+			'template' => 'page-templates/page-community-guidelines.php',
 		),
 		array(
-			'title' => 'Contact',
-			'slug'  => 'contact',
+			'title'    => 'Contact',
+			'slug'     => 'contact',
+			'template' => 'page-templates/page-contact.php',
 		),
 		array(
-			'title' => 'Privacy Policy',
-			'slug'  => 'privacy-policy',
+			'title'    => 'Privacy Policy',
+			'slug'     => 'privacy-policy',
+			'template' => 'page-templates/page-privacy-policy.php',
 		),
 		array(
-			'title' => 'Terms of Service',
-			'slug'  => 'terms-of-service',
+			'title'    => 'Terms of Service',
+			'slug'     => 'terms-of-service',
+			'template' => 'page-templates/page-terms-of-service.php',
+		),
+		array(
+			'title' => 'Blog',
+			'slug'  => 'blog',
+		),
+		array(
+			'title'    => 'Site Map',
+			'slug'     => 'sitemap',
+			'template' => 'page-templates/page-sitemap.php',
 		),
 		array(
 			'title'    => 'Affiliate Program',
@@ -404,9 +417,67 @@ function fbg_theme_activation() {
 		update_option( 'page_on_front', $home->ID );
 	}
 
+	$blog_page = get_page_by_path( 'blog' );
+	if ( $blog_page ) {
+		update_option( 'page_for_posts', $blog_page->ID );
+	}
+
 	flush_rewrite_rules();
 }
 add_action( 'after_switch_theme', 'fbg_theme_activation' );
+
+/**
+ * Assign templates to core internal pages, create Blog / HTML sitemap if missing, set posts page (one-time).
+ */
+function fbg_maybe_install_content_pages_v4() {
+	if ( ! current_user_can( 'manage_options' ) || get_option( 'fbg_content_pages_v4' ) ) {
+		return;
+	}
+	$map = array(
+		'about'                => 'page-templates/page-about.php',
+		'contact'              => 'page-templates/page-contact.php',
+		'how-it-works'         => 'page-templates/page-how-it-works.php',
+		'community-guidelines' => 'page-templates/page-community-guidelines.php',
+		'privacy-policy'       => 'page-templates/page-privacy-policy.php',
+		'terms-of-service'     => 'page-templates/page-terms-of-service.php',
+		'sitemap'              => 'page-templates/page-sitemap.php',
+	);
+	foreach ( $map as $slug => $tpl ) {
+		$page = get_page_by_path( $slug );
+		if ( $page ) {
+			update_post_meta( $page->ID, '_wp_page_template', $tpl );
+		}
+	}
+	if ( ! get_page_by_path( 'blog' ) ) {
+		wp_insert_post(
+			array(
+				'post_title'  => 'Blog',
+				'post_name'   => 'blog',
+				'post_status' => 'publish',
+				'post_type'   => 'page',
+			)
+		);
+	}
+	if ( ! get_page_by_path( 'sitemap' ) ) {
+		$sid = wp_insert_post(
+			array(
+				'post_title'  => 'Site Map',
+				'post_name'   => 'sitemap',
+				'post_status' => 'publish',
+				'post_type'   => 'page',
+			)
+		);
+		if ( $sid && ! is_wp_error( $sid ) ) {
+			update_post_meta( (int) $sid, '_wp_page_template', 'page-templates/page-sitemap.php' );
+		}
+	}
+	$blog = get_page_by_path( 'blog' );
+	if ( $blog && ! (int) get_option( 'page_for_posts' ) ) {
+		update_option( 'page_for_posts', $blog->ID );
+	}
+	update_option( 'fbg_content_pages_v4', '1' );
+}
+add_action( 'admin_init', 'fbg_maybe_install_content_pages_v4', 12 );
 
 /**
  * Create affiliate & legal pages once for sites that activated the theme before these pages existed.

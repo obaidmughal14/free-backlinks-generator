@@ -128,7 +128,7 @@ function fbg_footer_nav_fallback( $args ) {
 			array( 'url' => home_url( '/terms-of-service/' ), 'label' => __( 'Terms of Service', 'free-backlinks-generator' ) ),
 			array( 'url' => home_url( '/cookie-policy/' ), 'label' => __( 'Cookie Policy', 'free-backlinks-generator' ) ),
 			array( 'url' => home_url( '/gdpr-notice/' ), 'label' => __( 'GDPR Notice', 'free-backlinks-generator' ) ),
-			array( 'url' => home_url( '/wp-sitemap.xml' ), 'label' => __( 'Sitemap', 'free-backlinks-generator' ) ),
+			array( 'url' => home_url( '/sitemap/' ), 'label' => __( 'Site map', 'free-backlinks-generator' ) ),
 		),
 	);
 
