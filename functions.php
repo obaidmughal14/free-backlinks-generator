@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.1.5' );
+define( 'FBG_VERSION', '1.1.7' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -53,7 +53,6 @@ function fbg_theme_setup() {
 	add_image_size( 'fbg_card', 800, 450, true );
 	add_image_size( 'fbg_hero', 1600, 700, true );
 	add_image_size( 'fbg_sidebar_ad', 300, 600, true );
-	add_image_size( 'fbg_testimonial_avatar', 96, 96, true );
 }
 add_action( 'after_setup_theme', 'fbg_theme_setup' );
 

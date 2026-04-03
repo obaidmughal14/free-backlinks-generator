@@ -39,7 +39,7 @@ function fbg_register_testimonial_cpt() {
 			'menu_position'       => 21,
 			'capability_type'     => 'post',
 			'map_meta_cap'        => true,
-			'supports'            => array( 'title', 'editor', 'thumbnail', 'page-attributes' ),
+			'supports'            => array( 'title', 'editor', 'page-attributes' ),
 			'has_archive'         => false,
 			'rewrite'             => false,
 			'show_in_rest'        => true,
@@ -252,7 +252,6 @@ function fbg_testimonial_render_meta_box( $post ) {
 	?>
 	<p><strong><?php esc_html_e( 'Title field', 'free-backlinks-generator' ); ?></strong> — <?php esc_html_e( 'Member name (e.g. Sarah K.).', 'free-backlinks-generator' ); ?></p>
 	<p><strong><?php esc_html_e( 'Editor', 'free-backlinks-generator' ); ?></strong> — <?php esc_html_e( 'Full testimonial quote.', 'free-backlinks-generator' ); ?></p>
-	<p><strong><?php esc_html_e( 'Featured image', 'free-backlinks-generator' ); ?></strong> — <?php esc_html_e( 'Optional headshot; otherwise initials are shown.', 'free-backlinks-generator' ); ?></p>
 	<p>
 		<label for="fbg_testimonial_role"><strong><?php esc_html_e( 'Role / niche', 'free-backlinks-generator' ); ?></strong></label><br>
 		<input type="text" class="large-text" id="fbg_testimonial_role" name="fbg_testimonial_role" value="<?php echo esc_attr( $role ); ?>" placeholder="<?php esc_attr_e( 'e.g. SEO consultant', 'free-backlinks-generator' ); ?>">
@@ -312,25 +311,3 @@ function fbg_testimonial_save_meta( $post_id ) {
 	}
 }
 add_action( 'save_post_fbg_testimonial', 'fbg_testimonial_save_meta' );
-
-/**
- * Initials from display name for avatar fallback.
- *
- * @param string $name Name.
- * @return string
- */
-function fbg_testimonial_initials( $name ) {
-	$name = trim( (string) $name );
-	if ( '' === $name ) {
-		return '?';
-	}
-	$parts = preg_split( '/\s+/', $name );
-	$out   = '';
-	$slice = array_slice( $parts, 0, 2 );
-	foreach ( $slice as $p ) {
-		if ( $p !== '' ) {
-			$out .= strtoupper( function_exists( 'mb_substr' ) ? mb_substr( $p, 0, 1 ) : substr( $p, 0, 1 ) );
-		}
-	}
-	return $out !== '' ? $out : '?';
-}
