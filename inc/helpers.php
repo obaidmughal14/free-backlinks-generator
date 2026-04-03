@@ -518,6 +518,139 @@ function fbg_send_rejection_email( $user_id, $title, $reason ) {
 }
 
 /**
+ * Number of rows in the affiliate applications queue (admin).
+ *
+ * @return int
+ */
+function fbg_affiliate_applications_queue_count() {
+	$leads = get_option( 'fbg_affiliate_leads', array() );
+	return is_array( $leads ) ? count( $leads ) : 0;
+}
+
+/**
+ * One-time password reset URL for a user (same flow as “Lost password”).
+ *
+ * @param WP_User $user User.
+ * @return string Empty on failure.
+ */
+function fbg_affiliate_password_reset_url_for_user( $user ) {
+	if ( ! $user instanceof WP_User ) {
+		return '';
+	}
+	$key = get_password_reset_key( $user );
+	if ( is_wp_error( $key ) ) {
+		return '';
+	}
+	return network_site_url( 'wp-login.php?action=rp&key=' . $key . '&login=' . rawurlencode( $user->user_login ), 'login' );
+}
+
+/**
+ * Applicant confirmation after submitting the partner form.
+ *
+ * @param WP_User $user          User.
+ * @param bool    $created_account Whether a new WordPress account was just created.
+ */
+function fbg_send_affiliate_application_received_email( $user, $created_account ) {
+	if ( ! $user instanceof WP_User || ! is_email( $user->user_email ) ) {
+		return;
+	}
+	$blog = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+	$subj = sprintf(
+		/* translators: %s site name */
+		__( '[%s] We received your affiliate application', 'free-backlinks-generator' ),
+		$blog
+	);
+	$body_extra = $created_account
+		? '<p style="margin:0 0 16px;">' . esc_html__( 'We created a member account for you using this email. If your application is approved, you will receive another message with a secure link to choose your password and activate your partner dashboard.', 'free-backlinks-generator' ) . '</p>'
+		: '<p style="margin:0 0 16px;">' . esc_html__( 'Your application is tied to your existing account on this email.', 'free-backlinks-generator' ) . '</p>';
+	$html = fbg_email_html_layout(
+		__( 'Partner application received', 'free-backlinks-generator' ),
+		__( 'Thanks for applying', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 16px;">' . sprintf(
+			/* translators: %s display name */
+			esc_html__( 'Hi %s,', 'free-backlinks-generator' ),
+			esc_html( $user->display_name )
+		) . '</p>'
+		. '<p style="margin:0 0 16px;">' . esc_html__( 'We have your affiliate program application and will review it shortly (typically within two business days).', 'free-backlinks-generator' ) . '</p>'
+		. $body_extra
+		. '<p style="margin:0;font-size:14px;color:#64748b;">' . esc_html__( 'If you did not submit this request, you can ignore this email or contact us from the site.', 'free-backlinks-generator' ) . '</p>',
+		'',
+		'',
+		null
+	);
+	fbg_wp_mail_html( $user->user_email, $subj, $html );
+}
+
+/**
+ * Partner approved: approval copy + set-password link.
+ *
+ * @param WP_User $user      User.
+ * @param string  $reset_url Password reset URL (may be empty).
+ */
+function fbg_send_affiliate_approved_email( $user, $reset_url ) {
+	if ( ! $user instanceof WP_User || ! is_email( $user->user_email ) ) {
+		return;
+	}
+	$blog = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+	$aff  = home_url( '/affiliate-program/' );
+	$subj = sprintf(
+		/* translators: %s site name */
+		__( '[%s] Your affiliate application was approved', 'free-backlinks-generator' ),
+		$blog
+	);
+	$note = $reset_url
+		? '<p style="margin:0 0 16px;">' . esc_html__( 'Use the button below to choose a password for your account (or reset it). After that you can log in and open your dashboard to see referral stats and your share link.', 'free-backlinks-generator' ) . '</p>'
+		: '<p style="margin:0 0 16px;">' . esc_html__( 'You can log in with your existing password. Open the Affiliate Program page while logged in to copy your referral link and view stats in your dashboard.', 'free-backlinks-generator' ) . '</p>';
+	$html = fbg_email_html_layout(
+		__( 'You are approved as a partner', 'free-backlinks-generator' ),
+		__( 'Welcome to the affiliate program', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 16px;">' . sprintf(
+			/* translators: %s display name */
+			esc_html__( 'Hi %s,', 'free-backlinks-generator' ),
+			esc_html( $user->display_name )
+		) . '</p>'
+		. '<p style="margin:0 0 16px;">' . esc_html__( 'Great news — your partner application was approved. You can start sharing your referral link; attributed reads and messages will count toward your rewards as described on the program page.', 'free-backlinks-generator' ) . '</p>'
+		. $note,
+		$reset_url ? __( 'Choose your password', 'free-backlinks-generator' ) : __( 'Open affiliate program', 'free-backlinks-generator' ),
+		$reset_url ? $reset_url : $aff,
+		__( 'You will also see a notification in your dashboard when you log in.', 'free-backlinks-generator' )
+	);
+	fbg_wp_mail_html( $user->user_email, $subj, $html );
+}
+
+/**
+ * Partner application rejected.
+ *
+ * @param WP_User $user User.
+ */
+function fbg_send_affiliate_rejected_email( $user ) {
+	if ( ! $user instanceof WP_User || ! is_email( $user->user_email ) ) {
+		return;
+	}
+	$blog = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+	$subj = sprintf(
+		/* translators: %s site name */
+		__( '[%s] Update on your affiliate application', 'free-backlinks-generator' ),
+		$blog
+	);
+	$html = fbg_email_html_layout(
+		__( 'Affiliate application not approved', 'free-backlinks-generator' ),
+		__( 'Thank you for your interest', 'free-backlinks-generator' ),
+		'<p style="margin:0 0 16px;">' . sprintf(
+			/* translators: %s display name */
+			esc_html__( 'Hi %s,', 'free-backlinks-generator' ),
+			esc_html( $user->display_name )
+		) . '</p>'
+		. '<p style="margin:0 0 16px;">' . esc_html__( 'After review we are not able to approve your affiliate application at this time. This does not affect a normal member account if you already have one — you can still use the community features allowed for your role.', 'free-backlinks-generator' ) . '</p>'
+		. '<p style="margin:0;font-size:14px;color:#64748b;">' . esc_html__( 'If you have questions, reply to this thread by contacting us through the website.', 'free-backlinks-generator' ) . '</p>',
+		__( 'Visit the site', 'free-backlinks-generator' ),
+		home_url( '/' ),
+		null
+	);
+	fbg_wp_mail_html( $user->user_email, $subj, $html );
+}
+
+/**
  * Niches for forms.
  *
  * @return array<string, string>

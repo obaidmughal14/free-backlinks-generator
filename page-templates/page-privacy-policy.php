@@ -32,6 +32,25 @@ $site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
 			</p>
 		</div>
 	</section>
+	<section class="fbg-mkt-section fbg-container fbg-mkt-trust-strip" aria-label="<?php esc_attr_e( 'Privacy principles', 'free-backlinks-generator' ); ?>">
+		<div class="fbg-mkt-trust-strip__grid">
+			<div class="fbg-mkt-trust-strip__item">
+				<img src="<?php echo esc_url( get_theme_file_uri( 'assets/images/icon-dashboard.svg' ) ); ?>" width="48" height="48" alt="">
+				<strong><?php esc_html_e( 'Transparency', 'free-backlinks-generator' ); ?></strong>
+				<span><?php esc_html_e( 'We explain what we collect and why.', 'free-backlinks-generator' ); ?></span>
+			</div>
+			<div class="fbg-mkt-trust-strip__item">
+				<img src="<?php echo esc_url( get_theme_file_uri( 'assets/images/icon-community.svg' ) ); ?>" width="48" height="48" alt="">
+				<strong><?php esc_html_e( 'Control', 'free-backlinks-generator' ); ?></strong>
+				<span><?php esc_html_e( 'Rights and choices where the law allows.', 'free-backlinks-generator' ); ?></span>
+			</div>
+			<div class="fbg-mkt-trust-strip__item">
+				<img src="<?php echo esc_url( get_theme_file_uri( 'assets/images/icon-links.svg' ) ); ?>" width="48" height="48" alt="">
+				<strong><?php esc_html_e( 'Security', 'free-backlinks-generator' ); ?></strong>
+				<span><?php esc_html_e( 'Reasonable safeguards for accounts and data.', 'free-backlinks-generator' ); ?></span>
+			</div>
+		</div>
+	</section>
 	<?php fbg_render_privacy_policy_body(); ?>
 	<section class="fbg-mkt-section fbg-mkt-section--alt">
 		<div class="fbg-container" style="text-align: center;">

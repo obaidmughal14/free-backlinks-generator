@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.2.1' );
+define( 'FBG_VERSION', '1.2.3' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -27,8 +27,11 @@ require_once FBG_DIR . '/inc/legal-static.php';
 require_once FBG_DIR . '/inc/feed-sitemap.php';
 require_once FBG_DIR . '/inc/ajax-handlers.php';
 require_once FBG_DIR . '/inc/sidebar-ads.php';
+require_once FBG_DIR . '/inc/support-chat.php';
+require_once FBG_DIR . '/inc/support-tickets.php';
 if ( is_admin() ) {
 	require_once FBG_DIR . '/inc/admin-affiliates.php';
+	require_once FBG_DIR . '/inc/admin-support.php';
 }
 
 /**
@@ -159,12 +162,13 @@ function fbg_enqueue_assets() {
 		);
 	}
 
-	if ( is_post_type_archive( 'fbg_post' ) || is_home() ) {
+	$fbg_enqueue_blog_css = is_post_type_archive( 'fbg_post' ) || is_home() || is_singular( 'fbg_post' ) || is_singular( 'post' ) || is_page_template( 'page-templates/page-contact.php' );
+	if ( $fbg_enqueue_blog_css ) {
 		wp_enqueue_style( 'fbg-blog', FBG_URI . '/assets/css/blog.css', array( 'fbg-main' ), FBG_VERSION );
 	}
 
-	if ( is_singular( 'fbg_post' ) ) {
-		wp_enqueue_style( 'fbg-blog', FBG_URI . '/assets/css/blog.css', array( 'fbg-main' ), FBG_VERSION );
+	$fbg_sidebar_contact_js = is_singular( 'fbg_post' ) || is_home() || is_singular( 'post' ) || is_page_template( 'page-templates/page-contact.php' );
+	if ( $fbg_sidebar_contact_js ) {
 		wp_enqueue_script( 'fbg-single-sidebar', FBG_URI . '/assets/js/single-sidebar.js', array(), FBG_VERSION, true );
 		wp_localize_script(
 			'fbg-single-sidebar',
@@ -178,7 +182,9 @@ function fbg_enqueue_assets() {
 				),
 			)
 		);
+	}
 
+	if ( is_singular( 'fbg_post' ) ) {
 		if ( is_user_logged_in() && function_exists( 'fbg_get_user_completed_peer_reads' ) ) {
 			$read_pid = get_queried_object_id();
 			$read_uid = get_current_user_id();
@@ -227,6 +233,29 @@ function fbg_enqueue_assets() {
 		);
 	}
 
+	if ( is_page_template( 'page-templates/page-contact.php' ) ) {
+		wp_enqueue_script(
+			'fbg-support-tickets-public',
+			FBG_URI . '/assets/js/fbg-support-tickets-public.js',
+			array(),
+			FBG_VERSION,
+			true
+		);
+		wp_localize_script(
+			'fbg-support-tickets-public',
+			'fbgSupportTicket',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'fbg_support_ticket' ),
+				'strings' => array(
+					'sending' => __( 'Sending…', 'free-backlinks-generator' ),
+					'sent'    => __( 'Ticket created. Check your email for the reference number.', 'free-backlinks-generator' ),
+					'error'   => __( 'Could not create ticket. Please try again.', 'free-backlinks-generator' ),
+				),
+			)
+		);
+	}
+
 	$resp_deps = array( 'fbg-main' );
 	if ( is_page_template( 'page-templates/page-signup.php' ) || is_page_template( 'page-templates/page-login.php' ) || is_page_template( 'page-templates/page-forgot-password.php' ) ) {
 		$resp_deps[] = 'fbg-auth';
@@ -234,7 +263,7 @@ function fbg_enqueue_assets() {
 	if ( is_page_template( 'page-templates/page-dashboard.php' ) || is_page_template( 'page-templates/page-submit-post.php' ) ) {
 		$resp_deps[] = 'fbg-dashboard';
 	}
-	if ( is_post_type_archive( 'fbg_post' ) || is_home() || is_singular( 'fbg_post' ) ) {
+	if ( is_post_type_archive( 'fbg_post' ) || is_home() || is_singular( 'fbg_post' ) || is_singular( 'post' ) || is_page_template( 'page-templates/page-contact.php' ) ) {
 		$resp_deps[] = 'fbg-blog';
 	}
 	if ( is_page_template( fbg_marketing_page_templates() ) ) {
@@ -303,6 +332,16 @@ function fbg_theme_activation() {
 		add_role( 'fbg_member', 'FBG Member', $caps );
 	}
 	fbg_create_notifications_table();
+	if ( function_exists( 'fbg_create_chat_tables' ) ) {
+		fbg_create_chat_tables();
+	}
+	if ( function_exists( 'fbg_create_support_ticket_tables' ) ) {
+		fbg_create_support_ticket_tables();
+	}
+	if ( function_exists( 'fbg_support_register_capabilities' ) ) {
+		fbg_support_register_capabilities();
+	}
+	update_option( 'fbg_support_db_v', 1 );
 	fbg_seed_taxonomy_terms();
 
 	$pages = array(
@@ -425,6 +464,26 @@ function fbg_theme_activation() {
 	flush_rewrite_rules();
 }
 add_action( 'after_switch_theme', 'fbg_theme_activation' );
+
+/**
+ * Create support chat / ticket tables on existing installs (no re-activation required).
+ */
+function fbg_maybe_upgrade_support_tables() {
+	if ( (int) get_option( 'fbg_support_db_v', 0 ) >= 1 ) {
+		return;
+	}
+	if ( function_exists( 'fbg_create_chat_tables' ) ) {
+		fbg_create_chat_tables();
+	}
+	if ( function_exists( 'fbg_create_support_ticket_tables' ) ) {
+		fbg_create_support_ticket_tables();
+	}
+	if ( function_exists( 'fbg_support_register_capabilities' ) ) {
+		fbg_support_register_capabilities();
+	}
+	update_option( 'fbg_support_db_v', 1 );
+}
+add_action( 'after_setup_theme', 'fbg_maybe_upgrade_support_tables', 20 );
 
 /**
  * Assign templates to core internal pages, create Blog / HTML sitemap if missing, set posts page (one-time).

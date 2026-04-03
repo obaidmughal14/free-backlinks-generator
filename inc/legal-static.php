@@ -72,6 +72,40 @@ function fbg_render_privacy_policy_body() {
 				<?php esc_html_e( 'Questions about privacy:', 'free-backlinks-generator' ); ?>
 				<a href="mailto:<?php echo esc_attr( $mail ); ?>"><?php echo esc_html( $mail ); ?></a>
 			</p>
+
+			<h2><?php esc_html_e( '15. Summary: categories of data', 'free-backlinks-generator' ); ?></h2>
+			<p><?php esc_html_e( 'This table is a non-exhaustive overview. See the sections above for detail.', 'free-backlinks-generator' ); ?></p>
+			<div style="overflow-x: auto;">
+				<table class="fbg-legal-table">
+					<thead>
+						<tr>
+							<th scope="col"><?php esc_html_e( 'Category', 'free-backlinks-generator' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Examples', 'free-backlinks-generator' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Typical purpose', 'free-backlinks-generator' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><?php esc_html_e( 'Identity & account', 'free-backlinks-generator' ); ?></td>
+							<td><?php esc_html_e( 'Name, email, username, profile URL', 'free-backlinks-generator' ); ?></td>
+							<td><?php esc_html_e( 'Registration, login, support', 'free-backlinks-generator' ); ?></td>
+						</tr>
+						<tr>
+							<td><?php esc_html_e( 'Content', 'free-backlinks-generator' ); ?></td>
+							<td><?php esc_html_e( 'Guest posts, messages, uploads', 'free-backlinks-generator' ); ?></td>
+							<td><?php esc_html_e( 'Publish, moderate, display', 'free-backlinks-generator' ); ?></td>
+						</tr>
+						<tr>
+							<td><?php esc_html_e( 'Technical', 'free-backlinks-generator' ); ?></td>
+							<td><?php esc_html_e( 'IP, device, logs, cookies', 'free-backlinks-generator' ); ?></td>
+							<td><?php esc_html_e( 'Security, analytics, performance', 'free-backlinks-generator' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<h2><?php esc_html_e( '16. U.S. state privacy rights', 'free-backlinks-generator' ); ?></h2>
+			<p><?php esc_html_e( 'Residents of certain U.S. states may have additional rights (e.g. to know, delete, or opt out of certain “sales” or “sharing” as defined by local law). We do not sell personal information for money. To exercise rights, email us from the address associated with your account and describe your request.', 'free-backlinks-generator' ); ?></p>
 		</div>
 	</section>
 	<?php
@@ -137,6 +171,12 @@ function fbg_render_terms_of_service_body() {
 				<?php esc_html_e( 'Legal or account questions:', 'free-backlinks-generator' ); ?>
 				<a href="mailto:<?php echo esc_attr( $mail ); ?>"><?php echo esc_html( $mail ); ?></a>
 			</p>
+
+			<h2><?php esc_html_e( '16. Electronic communications', 'free-backlinks-generator' ); ?></h2>
+			<p><?php esc_html_e( 'You agree that we may send notices, receipts, and security alerts to the email on your account. Marketing messages, if any, will include an unsubscribe link where required.', 'free-backlinks-generator' ); ?></p>
+
+			<h2><?php esc_html_e( '17. Severability', 'free-backlinks-generator' ); ?></h2>
+			<p><?php esc_html_e( 'If any provision is held invalid, the remaining provisions stay in effect to the fullest extent permitted.', 'free-backlinks-generator' ); ?></p>
 		</div>
 	</section>
 	<?php

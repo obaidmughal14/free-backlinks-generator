@@ -1,0 +1,186 @@
+/* Floating live chat widget */
+.fbg-live-chat {
+	position: fixed;
+	z-index: 99990;
+	right: max(16px, env(safe-area-inset-right));
+	bottom: max(16px, env(safe-area-inset-bottom));
+	font-family: var(--font-body, system-ui, sans-serif);
+	font-size: 15px;
+}
+
+.fbg-live-chat__toggle {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	border: 0;
+	background: linear-gradient(135deg, #0d9488, #6366f1);
+	color: #fff;
+	font-size: 24px;
+	cursor: pointer;
+	box-shadow: 0 8px 28px rgba(15, 23, 42, 0.25);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.fbg-live-chat__toggle:hover {
+	filter: brightness(1.05);
+}
+
+.fbg-live-chat__panel {
+	position: absolute;
+	right: 0;
+	bottom: 64px;
+	width: min(100vw - 32px, 380px);
+	max-height: min(72vh, 520px);
+	display: flex;
+	flex-direction: column;
+	background: #fff;
+	border-radius: 16px;
+	box-shadow: 0 16px 48px rgba(15, 23, 42, 0.18);
+	border: 1px solid #e2e8f0;
+	overflow: hidden;
+}
+
+.fbg-live-chat__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 14px;
+	background: linear-gradient(135deg, #0f766e, #312e81);
+	color: #fff;
+}
+
+.fbg-live-chat__title {
+	font-size: 1rem;
+}
+
+.fbg-live-chat__close {
+	background: transparent;
+	border: 0;
+	color: #fff;
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0.9;
+}
+
+.fbg-live-chat__preform,
+.fbg-live-chat__thread {
+	padding: 14px;
+	overflow-y: auto;
+	flex: 1;
+	min-height: 120px;
+}
+
+.fbg-live-chat__hint {
+	font-size: 0.88rem;
+	color: #64748b;
+	margin: 0 0 12px;
+	line-height: 1.5;
+}
+
+.fbg-live-chat__label {
+	display: block;
+	margin-bottom: 10px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #334155;
+}
+
+.fbg-live-chat__label span {
+	display: block;
+	margin-bottom: 4px;
+}
+
+.fbg-live-chat__input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 8px 10px;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	font: inherit;
+}
+
+.fbg-live-chat__btn {
+	padding: 10px 16px;
+	border-radius: 10px;
+	border: 0;
+	font-weight: 700;
+	cursor: pointer;
+	font-size: 0.95rem;
+}
+
+.fbg-live-chat__btn--primary {
+	background: linear-gradient(135deg, #0d9488, #6366f1);
+	color: #fff;
+	margin-top: 8px;
+	width: 100%;
+}
+
+.fbg-live-chat__thread {
+	background: #f8fafc;
+}
+
+.fbg-live-chat__msg {
+	margin-bottom: 10px;
+	padding: 10px 12px;
+	border-radius: 12px;
+	font-size: 0.92rem;
+	line-height: 1.5;
+}
+
+.fbg-live-chat__msg--visitor {
+	background: #e0f2fe;
+	margin-left: 20px;
+}
+
+.fbg-live-chat__msg--agent {
+	background: #fff;
+	border: 1px solid #e2e8f0;
+	margin-right: 20px;
+}
+
+.fbg-live-chat__msg--system {
+	background: #fef3c7;
+	font-size: 0.85rem;
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 95%;
+	text-align: center;
+}
+
+.fbg-live-chat__msg-meta {
+	display: block;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #64748b;
+	margin-bottom: 4px;
+}
+
+.fbg-live-chat__composer {
+	padding: 10px 12px 14px;
+	border-top: 1px solid #e2e8f0;
+	background: #fff;
+}
+
+.fbg-live-chat__textarea {
+	width: 100%;
+	box-sizing: border-box;
+	border: 1px solid #cbd5e1;
+	border-radius: 10px;
+	padding: 10px;
+	font: inherit;
+	resize: vertical;
+	min-height: 56px;
+	margin-bottom: 8px;
+}
+
+.fbg-live-chat__status {
+	margin: 0;
+	padding: 0 14px 10px;
+	font-size: 0.82rem;
+	color: #b45309;
+}

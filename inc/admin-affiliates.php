@@ -26,6 +26,61 @@ function fbg_affiliate_admin_menu() {
 add_action( 'admin_menu', 'fbg_affiliate_admin_menu' );
 
 /**
+ * Pending-application count badge on Affiliates admin menu.
+ *
+ * @return void
+ */
+function fbg_affiliate_admin_menu_badge() {
+	global $menu;
+	if ( ! current_user_can( 'manage_options' ) || ! function_exists( 'fbg_affiliate_applications_queue_count' ) ) {
+		return;
+	}
+	$count = fbg_affiliate_applications_queue_count();
+	if ( $count < 1 || ! is_array( $menu ) ) {
+		return;
+	}
+	foreach ( $menu as $i => $item ) {
+		if ( isset( $item[2] ) && 'fbg-affiliate-program' === $item[2] ) {
+			/* translators: %s: number of pending applications */
+			$title = sprintf( __( 'Affiliates — %s pending applications', 'free-backlinks-generator' ), number_format_i18n( $count ) );
+			$menu[ $i ][0] .= ' <span class="awaiting-mod count-' . (int) $count . '" title="' . esc_attr( $title ) . '"><span class="pending-count">' . esc_html( number_format_i18n( $count ) ) . '</span></span>'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			break;
+		}
+	}
+}
+add_action( 'admin_menu', 'fbg_affiliate_admin_menu_badge', 999 );
+
+/**
+ * Dashboard notice when affiliate applications need review.
+ *
+ * @return void
+ */
+function fbg_affiliate_admin_pending_notice() {
+	if ( ! current_user_can( 'manage_options' ) || ! function_exists( 'fbg_affiliate_applications_queue_count' ) ) {
+		return;
+	}
+	$count = fbg_affiliate_applications_queue_count();
+	if ( $count < 1 ) {
+		return;
+	}
+	$url = admin_url( 'admin.php?page=fbg-affiliate-program&tab=applications' );
+	printf(
+		'<div class="notice notice-info is-dismissible"><p><strong>%1$s</strong> — %2$s <a href="%3$s">%4$s</a></p></div>',
+		esc_html(
+			sprintf(
+				/* translators: %s number of applications */
+				_n( '%s pending affiliate application', '%s pending affiliate applications', $count, 'free-backlinks-generator' ),
+				number_format_i18n( $count )
+			)
+		),
+		esc_html__( 'Review, approve, or reject from the Affiliates screen.', 'free-backlinks-generator' ),
+		esc_url( $url ),
+		esc_html__( 'Open applications', 'free-backlinks-generator' )
+	);
+}
+add_action( 'admin_notices', 'fbg_affiliate_admin_pending_notice' );
+
+/**
  * Enqueue admin styles for affiliate screens.
  *
  * @param string $hook_suffix Current admin page.
@@ -58,7 +113,7 @@ function fbg_affiliate_admin_handle_post() {
 
 	$action       = sanitize_key( wp_unslash( $_POST['fbg_aff_action'] ) );
 	$redirect_tab = 'partners';
-	if ( in_array( $action, array( 'approve_lead', 'dismiss_lead' ), true ) ) {
+	if ( in_array( $action, array( 'approve_lead', 'dismiss_lead', 'reject_lead' ), true ) ) {
 		$redirect_tab = 'applications';
 	} elseif ( 'add_partner' === $action ) {
 		$posted_tab = isset( $_POST['fbg_aff_tab'] ) ? sanitize_key( wp_unslash( $_POST['fbg_aff_tab'] ) ) : 'add';
@@ -145,38 +200,79 @@ function fbg_affiliate_admin_handle_post() {
 			break;
 
 		case 'approve_lead':
-			$idx = isset( $_POST['lead_index'] ) ? absint( $_POST['lead_index'] ) : 99999;
+			$idx   = isset( $_POST['lead_index'] ) ? absint( $_POST['lead_index'] ) : 99999;
 			$leads = get_option( 'fbg_affiliate_leads', array() );
 			if ( ! is_array( $leads ) || ! isset( $leads[ $idx ] ) ) {
 				$args['fbg_aff_err'] = 'lead_missing';
 				break;
 			}
 			$lead = $leads[ $idx ];
+			$uid  = isset( $lead['user_id'] ) ? absint( $lead['user_id'] ) : 0;
 			$em   = isset( $lead['email'] ) ? sanitize_email( $lead['email'] ) : '';
-			$user = is_email( $em ) ? get_user_by( 'email', $em ) : false;
+			$user = $uid ? get_userdata( $uid ) : ( is_email( $em ) ? get_user_by( 'email', $em ) : false );
 			if ( ! $user ) {
 				$args['fbg_aff_err'] = 'lead_no_wp_user';
 				break;
 			}
 			update_user_meta( $user->ID, '_fbg_affiliate_active', 'yes' );
 			update_user_meta( $user->ID, '_fbg_affiliate_approved_at', time() );
+			delete_user_meta( $user->ID, '_fbg_affiliate_app_status' );
+			delete_user_meta( $user->ID, '_fbg_affiliate_app_payload' );
+			delete_user_meta( $user->ID, '_fbg_affiliate_app_submitted_at' );
 			array_splice( $leads, $idx, 1 );
 			update_option( 'fbg_affiliate_leads', $leads, false );
+			$reset_url = function_exists( 'fbg_affiliate_password_reset_url_for_user' ) ? fbg_affiliate_password_reset_url_for_user( $user ) : '';
+			if ( function_exists( 'fbg_send_affiliate_approved_email' ) ) {
+				fbg_send_affiliate_approved_email( $user, $reset_url );
+			}
 			if ( function_exists( 'fbg_create_notification' ) ) {
 				fbg_create_notification(
 					$user->ID,
 					'affiliate_approved',
-					__( 'Your affiliate application was approved. Share your referral link from the Affiliate Program page.', 'free-backlinks-generator' ),
+					__( 'Your affiliate application was approved. Check your email for a link to set your password if needed, then share your referral link from the Affiliate Program page.', 'free-backlinks-generator' ),
 					null
 				);
 			}
 			$args['fbg_aff_ok'] = 'lead_approved';
 			break;
 
+		case 'reject_lead':
+			$idx   = isset( $_POST['lead_index'] ) ? absint( $_POST['lead_index'] ) : 99999;
+			$leads = get_option( 'fbg_affiliate_leads', array() );
+			if ( ! is_array( $leads ) || ! isset( $leads[ $idx ] ) ) {
+				$args['fbg_aff_err'] = 'lead_missing';
+				break;
+			}
+			$lead = $leads[ $idx ];
+			$uid  = isset( $lead['user_id'] ) ? absint( $lead['user_id'] ) : 0;
+			$em   = isset( $lead['email'] ) ? sanitize_email( $lead['email'] ) : '';
+			$user = $uid ? get_userdata( $uid ) : ( is_email( $em ) ? get_user_by( 'email', $em ) : false );
+			if ( $user ) {
+				update_user_meta( $user->ID, '_fbg_affiliate_app_status', 'rejected' );
+				update_user_meta( $user->ID, '_fbg_affiliate_active', 'no' );
+				delete_user_meta( $user->ID, '_fbg_affiliate_approved_at' );
+				if ( function_exists( 'fbg_send_affiliate_rejected_email' ) ) {
+					fbg_send_affiliate_rejected_email( $user );
+				}
+			}
+			array_splice( $leads, $idx, 1 );
+			update_option( 'fbg_affiliate_leads', $leads, false );
+			$args['fbg_aff_ok'] = 'lead_rejected';
+			break;
+
 		case 'dismiss_lead':
-			$idx = isset( $_POST['lead_index'] ) ? absint( $_POST['lead_index'] ) : 99999;
+			$idx   = isset( $_POST['lead_index'] ) ? absint( $_POST['lead_index'] ) : 99999;
 			$leads = get_option( 'fbg_affiliate_leads', array() );
 			if ( is_array( $leads ) && isset( $leads[ $idx ] ) ) {
+				$row  = $leads[ $idx ];
+				$duid = isset( $row['user_id'] ) ? absint( $row['user_id'] ) : 0;
+				$dem  = isset( $row['email'] ) ? sanitize_email( $row['email'] ) : '';
+				$dusr = $duid ? get_userdata( $duid ) : ( is_email( $dem ) ? get_user_by( 'email', $dem ) : false );
+				if ( $dusr && 'pending' === get_user_meta( $dusr->ID, '_fbg_affiliate_app_status', true ) ) {
+					delete_user_meta( $dusr->ID, '_fbg_affiliate_app_status' );
+					delete_user_meta( $dusr->ID, '_fbg_affiliate_app_payload' );
+					delete_user_meta( $dusr->ID, '_fbg_affiliate_app_submitted_at' );
+				}
 				array_splice( $leads, $idx, 1 );
 				update_option( 'fbg_affiliate_leads', $leads, false );
 				$args['fbg_aff_ok'] = 'lead_dismissed';
@@ -221,8 +317,9 @@ function fbg_render_affiliate_admin_page() {
 			'removed'          => __( 'Partner removed from the program.', 'free-backlinks-generator' ),
 			'warned'           => __( 'Warning saved and the user was notified.', 'free-backlinks-generator' ),
 			'warning_cleared'  => __( 'Warning cleared.', 'free-backlinks-generator' ),
-			'lead_approved'    => __( 'Application approved and linked WordPress user activated as partner.', 'free-backlinks-generator' ),
-			'lead_dismissed'   => __( 'Application removed from the queue.', 'free-backlinks-generator' ),
+			'lead_approved'    => __( 'Application approved. The applicant was emailed with approval details and a link to set their password.', 'free-backlinks-generator' ),
+			'lead_rejected'    => __( 'Application rejected. The applicant was notified by email.', 'free-backlinks-generator' ),
+			'lead_dismissed'   => __( 'Application removed from the queue (no rejection email sent).', 'free-backlinks-generator' ),
 		);
 		if ( isset( $messages[ $ok ] ) ) {
 			printf( '<div class="notice notice-success is-dismissible"><p>%s</p></div>', esc_html( $messages[ $ok ] ) );
@@ -245,7 +342,7 @@ function fbg_render_affiliate_admin_page() {
 	?>
 	<div class="wrap fbg-aff-admin">
 		<h1><?php esc_html_e( 'Affiliate Program', 'free-backlinks-generator' ); ?></h1>
-		<p class="description"><?php esc_html_e( 'Approve partners, send warnings, and remove access. Only approved partners earn new referral credit (except legacy accounts that already had traffic).', 'free-backlinks-generator' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Partner applications create (or update) a member account. Approve to activate the program and email a password link; reject to notify the applicant. Only approved partners earn new referral credit.', 'free-backlinks-generator' ); ?></p>
 
 		<h2 class="nav-tab-wrapper wp-clearfix">
 			<a href="<?php echo esc_url( add_query_arg( 'tab', 'partners', $base ) ); ?>" class="nav-tab <?php echo 'partners' === $tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Active partners', 'free-backlinks-generator' ); ?></a>
@@ -490,8 +587,15 @@ function fbg_aff_admin_tab_applications() {
 									<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
 									<button type="submit" class="button button-small button-primary"><?php esc_html_e( 'Approve', 'free-backlinks-generator' ); ?></button>
 								</form>
+								<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Reject this application? The applicant will receive an email.', 'free-backlinks-generator' ) ); ?>');">
+									<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
+									<input type="hidden" name="fbg_aff_action" value="reject_lead">
+									<input type="hidden" name="fbg_aff_tab" value="applications">
+									<input type="hidden" name="lead_index" value="<?php echo esc_attr( (string) $idx ); ?>">
+									<button type="submit" class="button button-small"><?php esc_html_e( 'Reject', 'free-backlinks-generator' ); ?></button>
+								</form>
 							<?php endif; ?>
-							<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Remove this application from the list?', 'free-backlinks-generator' ) ); ?>');">
+							<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Remove from the list without sending an email?', 'free-backlinks-generator' ) ); ?>');">
 								<?php wp_nonce_field( 'fbg_aff_admin' ); ?>
 								<input type="hidden" name="fbg_aff_action" value="dismiss_lead">
 								<input type="hidden" name="fbg_aff_tab" value="applications">

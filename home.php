@@ -20,36 +20,41 @@ $paged = max( 1, (int) get_query_var( 'paged' ) );
 			</p>
 		</div>
 	</section>
-	<div class="fbg-container fbg-section">
-		<div class="fbg-post-grid">
-			<?php
-			if ( have_posts() ) :
-				while ( have_posts() ) :
-					the_post();
-					get_template_part( 'template-parts/content', 'post-card' );
-				endwhile;
-			else :
+	<div class="fbg-container fbg-section fbg-blog-index__body">
+		<div class="fbg-single-layout fbg-blog-index__layout">
+			<div class="fbg-single-layout__main">
+				<div class="fbg-post-grid">
+					<?php
+					if ( have_posts() ) :
+						while ( have_posts() ) :
+							the_post();
+							get_template_part( 'template-parts/content', 'post-card' );
+						endwhile;
+					else :
+						?>
+						<p><?php esc_html_e( 'No posts yet.', 'free-backlinks-generator' ); ?></p>
+					<?php endif; ?>
+				</div>
+				<?php
+				global $wp_query;
+				if ( $wp_query->max_num_pages > 1 ) {
+					$links = paginate_links(
+						array(
+							'mid_size'  => 2,
+							'prev_text' => '← ' . __( 'Newer', 'free-backlinks-generator' ),
+							'next_text' => __( 'Older', 'free-backlinks-generator' ) . ' →',
+						)
+					);
+					if ( $links ) {
+						echo '<nav class="fbg-pagination" aria-label="' . esc_attr__( 'Blog pagination', 'free-backlinks-generator' ) . '">';
+						echo wp_kses_post( $links );
+						echo '</nav>';
+					}
+				}
 				?>
-				<p><?php esc_html_e( 'No posts yet.', 'free-backlinks-generator' ); ?></p>
-			<?php endif; ?>
+			</div>
+			<?php get_template_part( 'template-parts/single', 'sidebar' ); ?>
 		</div>
-		<?php
-		global $wp_query;
-		if ( $wp_query->max_num_pages > 1 ) {
-			$links = paginate_links(
-				array(
-					'mid_size'  => 2,
-					'prev_text' => '← ' . __( 'Newer', 'free-backlinks-generator' ),
-					'next_text' => __( 'Older', 'free-backlinks-generator' ) . ' →',
-				)
-			);
-			if ( $links ) {
-				echo '<nav class="fbg-pagination" aria-label="' . esc_attr__( 'Blog pagination', 'free-backlinks-generator' ) . '">';
-				echo wp_kses_post( $links );
-				echo '</nav>';
-			}
-		}
-		?>
 	</div>
 </main>
 <?php

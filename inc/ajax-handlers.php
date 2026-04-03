@@ -662,7 +662,7 @@ function fbg_maybe_export_gdpr() {
 add_action( 'template_redirect', 'fbg_maybe_export_gdpr', 1 );
 
 /**
- * Public affiliate program application (rate-limited, stored + emailed).
+ * Public affiliate program application: registers a new member account when needed, queues review, emails applicant + admin.
  */
 function fbg_handle_affiliate_apply() {
 	check_ajax_referer( 'fbg_affiliate_nonce', 'nonce' );
@@ -700,23 +700,116 @@ function fbg_handle_affiliate_apply() {
 		wp_send_json_error( array( 'message' => __( 'You must agree to the partner terms.', 'free-backlinks-generator' ) ) );
 	}
 
+	if ( is_user_logged_in() ) {
+		$current = wp_get_current_user();
+		if ( 0 !== strcasecmp( $email, $current->user_email ) ) {
+			wp_send_json_error( array( 'message' => __( 'Please use the email address on your logged-in account, or log out to apply with a different email.', 'free-backlinks-generator' ) ) );
+		}
+	}
+
+	$existing = get_user_by( 'email', $email );
+	if ( $existing && function_exists( 'fbg_is_user_affiliate_partner' ) && fbg_is_user_affiliate_partner( $existing->ID ) ) {
+		wp_send_json_error( array( 'message' => __( 'This email is already enrolled as an approved partner. Log in to copy your referral link.', 'free-backlinks-generator' ) ) );
+	}
+	if ( $existing && 'pending' === get_user_meta( $existing->ID, '_fbg_affiliate_app_status', true ) ) {
+		wp_send_json_error( array( 'message' => __( 'You already have an application under review for this email. We will email you when there is an update.', 'free-backlinks-generator' ) ) );
+	}
+
+	$created_account = false;
+	$user_id         = 0;
+
+	if ( $existing ) {
+		$user_id = (int) $existing->ID;
+		wp_update_user(
+			array(
+				'ID'           => $user_id,
+				'display_name' => $name,
+				'user_url'     => $web,
+			)
+		);
+		$member_user = new WP_User( $user_id );
+		if ( get_role( 'fbg_member' ) && ! in_array( 'fbg_member', (array) $member_user->roles, true ) && ! user_can( $member_user, 'manage_options' ) ) {
+			$member_user->set_role( 'fbg_member' );
+		}
+		update_user_meta( $user_id, '_fbg_website_url', $web );
+		update_user_meta( $user_id, '_fbg_niche', $niche );
+	} else {
+		$username = fbg_username_from_email( $email );
+		$pass     = wp_generate_password( 32, true, true );
+		$user_id  = wp_create_user( $username, $pass, $email );
+		if ( is_wp_error( $user_id ) ) {
+			wp_send_json_error( array( 'message' => $user_id->get_error_message() ) );
+		}
+		$created_account = true;
+		wp_update_user(
+			array(
+				'ID'           => $user_id,
+				'display_name' => $name,
+				'user_url'     => $web,
+				'role'         => get_role( 'fbg_member' ) ? 'fbg_member' : 'subscriber',
+			)
+		);
+		update_user_meta( $user_id, '_fbg_website_url', $web );
+		update_user_meta( $user_id, '_fbg_niche', $niche );
+		update_user_meta( $user_id, '_fbg_membership', 'free' );
+		update_user_meta( $user_id, '_fbg_joined', time() );
+		update_user_meta( $user_id, '_fbg_total_posts', 0 );
+		update_user_meta( $user_id, '_fbg_total_links', 0 );
+		update_user_meta( $user_id, '_fbg_tier', 'seedling' );
+	}
+
+	update_user_meta( $user_id, '_fbg_affiliate_app_status', 'pending' );
+	update_user_meta( $user_id, '_fbg_affiliate_app_submitted_at', time() );
+	update_user_meta(
+		$user_id,
+		'_fbg_affiliate_app_payload',
+		wp_json_encode(
+			array(
+				'name'  => $name,
+				'email' => $email,
+				'web'   => $web,
+				'aud'   => $aud,
+				'niche' => $niche,
+				'plan'  => $plan,
+			)
+		)
+	);
+	delete_user_meta( $user_id, '_fbg_affiliate_active' );
+
 	$lead = array(
-		'ts'    => time(),
-		'ip'    => $ip,
-		'name'  => $name,
-		'email' => $email,
-		'web'   => $web,
-		'aud'   => $aud,
-		'niche' => $niche,
-		'plan'  => $plan,
+		'ts'      => time(),
+		'ip'      => $ip,
+		'user_id' => $user_id,
+		'name'    => $name,
+		'email'   => $email,
+		'web'     => $web,
+		'aud'     => $aud,
+		'niche'   => $niche,
+		'plan'    => $plan,
 	);
 	$leads = get_option( 'fbg_affiliate_leads', array() );
 	if ( ! is_array( $leads ) ) {
 		$leads = array();
 	}
+	$leads = array_values(
+		array_filter(
+			$leads,
+			static function ( $row ) use ( $email ) {
+				if ( ! is_array( $row ) || empty( $row['email'] ) ) {
+					return true;
+				}
+				return 0 !== strcasecmp( sanitize_email( (string) $row['email'] ), $email );
+			}
+		)
+	);
 	array_unshift( $leads, $lead );
 	$leads = array_slice( $leads, 0, 100 );
 	update_option( 'fbg_affiliate_leads', $leads, false );
+
+	$applicant = get_userdata( $user_id );
+	if ( $applicant && function_exists( 'fbg_send_affiliate_application_received_email' ) ) {
+		fbg_send_affiliate_application_received_email( $applicant, $created_account );
+	}
 
 	$admin = get_option( 'admin_email' );
 	if ( is_email( $admin ) && function_exists( 'fbg_wp_mail_html' ) && function_exists( 'fbg_email_html_layout' ) ) {
@@ -725,20 +818,24 @@ function fbg_handle_affiliate_apply() {
 			__( '[%s] New affiliate application', 'free-backlinks-generator' ),
 			get_bloginfo( 'name' )
 		);
-		$rows = '<table role="presentation" style="width:100%;font-size:15px;border-collapse:collapse;">'
+		$review  = admin_url( 'admin.php?page=fbg-affiliate-program&tab=applications' );
+		$edit_u  = admin_url( 'user-edit.php?user_id=' . $user_id );
+		$rows    = '<p style="margin:0 0 12px;"><strong>' . esc_html__( 'WordPress user ID', 'free-backlinks-generator' ) . ':</strong> <a href="' . esc_url( $edit_u ) . '">' . (int) $user_id . '</a>'
+			. ( $created_account ? ' — <em>' . esc_html__( 'new account created from this application', 'free-backlinks-generator' ) . '</em>' : '' ) . '</p>';
+		$rows   .= '<table role="presentation" style="width:100%;font-size:15px;border-collapse:collapse;">'
 			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Name', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $name ) . '</td></tr>'
 			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Email', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $email ) . '</td></tr>'
 			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Website', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $web ) . '</td></tr>'
 			. '<tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><strong>' . esc_html__( 'Reach band', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">' . esc_html( $aud ) . '</td></tr>'
 			. '<tr><td style="padding:8px 0;"><strong>' . esc_html__( 'Niche', 'free-backlinks-generator' ) . '</strong></td><td style="padding:8px 0;">' . esc_html( $niche ) . '</td></tr></table>'
 			. '<p style="margin-top:20px;"><strong>' . esc_html__( 'Promotion plan', 'free-backlinks-generator' ) . '</strong></p><p style="white-space:pre-wrap;color:#475569;">' . esc_html( $plan ) . '</p>';
-		$html = fbg_email_html_layout(
-			__( 'New partner application', 'free-backlinks-generator' ),
+		$html    = fbg_email_html_layout(
+			__( 'New partner application — action required', 'free-backlinks-generator' ),
 			__( 'Affiliate application received', 'free-backlinks-generator' ),
 			$rows,
-			__( 'WordPress admin', 'free-backlinks-generator' ),
-			admin_url(),
-			__( 'Review applications under Affiliates in the WordPress admin.', 'free-backlinks-generator' )
+			__( 'Review applications', 'free-backlinks-generator' ),
+			$review,
+			__( 'Approve or reject from Affiliates → Applications. Approving sends the applicant a password link (if needed) and activation notice.', 'free-backlinks-generator' )
 		);
 		fbg_wp_mail_html( $admin, $subj, $html );
 	}

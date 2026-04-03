@@ -5,35 +5,16 @@
  * @package Free_Backlinks_Generator
  */
 
-$ads            = function_exists( 'fbg_sidebar_ads_for_template' ) ? fbg_sidebar_ads_for_template() : array();
-$mode           = get_option( 'fbg_sidebar_ads_mode', 'slider' );
-$autoplay       = max( 0, (int) get_option( 'fbg_sidebar_ads_autoplay', 5 ) );
-$has_ads        = ! empty( $ads );
-$use_slider     = $has_ads && 'slider' === $mode;
+$ads             = function_exists( 'fbg_sidebar_ads_for_template' ) ? fbg_sidebar_ads_for_template() : array();
+$mode            = get_option( 'fbg_sidebar_ads_mode', 'slider' );
+$autoplay        = max( 0, (int) get_option( 'fbg_sidebar_ads_autoplay', 5 ) );
+$has_ads         = ! empty( $ads );
+$use_slider      = $has_ads && 'slider' === $mode;
 $show_slider_nav = count( $ads ) > 1;
-$sidebar_class  = $has_ads ? 'fbg-post-sidebar fbg-post-sidebar--has-ads' : 'fbg-post-sidebar fbg-post-sidebar--contact-only';
+$sidebar_class   = $has_ads ? 'fbg-post-sidebar fbg-post-sidebar--has-ads' : 'fbg-post-sidebar fbg-post-sidebar--contact-only';
 ?>
 <aside class="<?php echo esc_attr( $sidebar_class ); ?>" aria-label="<?php esc_attr_e( 'Sidebar', 'free-backlinks-generator' ); ?>">
-	<section class="fbg-sidebar-card fbg-sidebar-card--contact">
-		<h2 class="fbg-sidebar-card__title"><?php esc_html_e( 'Contact us', 'free-backlinks-generator' ); ?></h2>
-		<p class="fbg-sidebar-card__intro"><?php esc_html_e( 'Questions about guest posts or partnerships? Send a message and we will get back to you.', 'free-backlinks-generator' ); ?></p>
-		<form id="fbg-sidebar-contact-form" class="fbg-sidebar-form" novalidate>
-			<div class="fbg-sidebar-form__field">
-				<label for="fbg-sc-name"><?php esc_html_e( 'Name', 'free-backlinks-generator' ); ?></label>
-				<input type="text" id="fbg-sc-name" name="name" required maxlength="120" autocomplete="name">
-			</div>
-			<div class="fbg-sidebar-form__field">
-				<label for="fbg-sc-email"><?php esc_html_e( 'Email', 'free-backlinks-generator' ); ?></label>
-				<input type="email" id="fbg-sc-email" name="email" required autocomplete="email">
-			</div>
-			<div class="fbg-sidebar-form__field">
-				<label for="fbg-sc-msg"><?php esc_html_e( 'Message', 'free-backlinks-generator' ); ?></label>
-				<textarea id="fbg-sc-msg" name="message" required rows="4" maxlength="2000"></textarea>
-			</div>
-			<button type="submit" class="fbg-sidebar-form__submit"><?php esc_html_e( 'Send message', 'free-backlinks-generator' ); ?></button>
-			<p id="fbg-sc-feedback" class="fbg-sidebar-form__feedback" role="status" hidden></p>
-		</form>
-	</section>
+	<?php get_template_part( 'template-parts/contact-form-block' ); ?>
 
 	<?php if ( ! empty( $ads ) ) : ?>
 		<section class="fbg-sidebar-card fbg-sidebar-card--ads" aria-label="<?php esc_attr_e( 'Sponsored', 'free-backlinks-generator' ); ?>">

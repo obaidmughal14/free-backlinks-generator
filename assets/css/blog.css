@@ -536,3 +536,38 @@
 .fbg-single-hero .fbg-read-tracker__label {
 	color: rgba(255, 255, 255, 0.95);
 }
+
+/* Blog index: grid + sidebar (same pattern as guest posts) */
+.fbg-blog-index__body .fbg-single-layout {
+	padding-block: var(--space-xl) var(--space-2xl);
+}
+@media (max-width: 1023px) {
+	.fbg-blog-index__body .fbg-post-sidebar {
+		margin-top: var(--space-xl);
+	}
+}
+
+/* Standard blog single */
+.fbg-single-hero__img--pattern {
+	object-fit: cover;
+	object-position: center;
+	opacity: 0.4;
+	filter: saturate(1.1);
+}
+.fbg-blog-single__tags {
+	margin-top: var(--space-lg);
+	font-size: 0.9rem;
+	color: var(--color-text-secondary);
+}
+.fbg-blog-single__tags a {
+	color: var(--color-accent-dark);
+	text-decoration: none;
+	font-weight: 600;
+}
+.fbg-blog-single__tags a:hover {
+	text-decoration: underline;
+}
+.fbg-blog-single__back {
+	margin-top: var(--space-xl);
+	text-align: center;
+}
