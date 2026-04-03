@@ -392,11 +392,10 @@ body.fbg-submit-page #main-content {
 	padding-block: var(--space-md);
 	flex-wrap: wrap;
 }
-.fbg-submit-header__logo img {
+.fbg-submit-header__logo img,
+.fbg-submit-header__logo .fbg-site-logo__img {
 	display: block;
-	height: 40px;
 	width: auto;
-	max-width: 200px;
 	object-fit: contain;
 }
 .fbg-submit-header__actions {

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.1.4' );
+define( 'FBG_VERSION', '1.1.5' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -19,6 +19,9 @@ require_once FBG_DIR . '/inc/custom-post-types.php';
 require_once FBG_DIR . '/inc/user-roles.php';
 require_once FBG_DIR . '/inc/security.php';
 require_once FBG_DIR . '/inc/customizer-social.php';
+require_once FBG_DIR . '/inc/customizer-theme-options.php';
+require_once FBG_DIR . '/inc/menu-fallbacks.php';
+require_once FBG_DIR . '/inc/testimonials-cpt.php';
 require_once FBG_DIR . '/inc/seo.php';
 require_once FBG_DIR . '/inc/ajax-handlers.php';
 require_once FBG_DIR . '/inc/sidebar-ads.php';
@@ -40,14 +43,17 @@ function fbg_theme_setup() {
 
 	register_nav_menus(
 		array(
-			'primary'   => __( 'Primary Menu', 'free-backlinks-generator' ),
-			'footer'    => __( 'Footer Menu', 'free-backlinks-generator' ),
+			'primary'  => __( 'Header menu', 'free-backlinks-generator' ),
+			'footer_1' => __( 'Footer — column 1', 'free-backlinks-generator' ),
+			'footer_2' => __( 'Footer — column 2', 'free-backlinks-generator' ),
+			'footer_3' => __( 'Footer — column 3', 'free-backlinks-generator' ),
 		)
 	);
 
 	add_image_size( 'fbg_card', 800, 450, true );
 	add_image_size( 'fbg_hero', 1600, 700, true );
 	add_image_size( 'fbg_sidebar_ad', 300, 600, true );
+	add_image_size( 'fbg_testimonial_avatar', 96, 96, true );
 }
 add_action( 'after_setup_theme', 'fbg_theme_setup' );
 
@@ -446,6 +452,26 @@ function fbg_maybe_install_marketing_pages() {
 	update_option( 'fbg_marketing_pages_v1', 1 );
 }
 add_action( 'admin_init', 'fbg_maybe_install_marketing_pages', 30 );
+
+/**
+ * Move legacy "Footer Menu" assignment to Footer column 1 when upgrading to three footer locations.
+ */
+function fbg_maybe_migrate_footer_nav_location() {
+	if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	if ( get_option( 'fbg_footer_nav_migrated_15' ) ) {
+		return;
+	}
+	$locs = get_theme_mod( 'nav_menu_locations', array() );
+	if ( is_array( $locs ) && ! empty( $locs['footer'] ) && empty( $locs['footer_1'] ) ) {
+		$locs['footer_1'] = (int) $locs['footer'];
+		unset( $locs['footer'] );
+		set_theme_mod( 'nav_menu_locations', $locs );
+	}
+	update_option( 'fbg_footer_nav_migrated_15', '1' );
+}
+add_action( 'admin_init', 'fbg_maybe_migrate_footer_nav_location', 5 );
 
 /**
  * Preconnect to font hosts (Core Web Vitals / faster font discovery).
