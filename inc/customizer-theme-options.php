@@ -312,6 +312,30 @@ function fbg_customize_theme_options_register( $wp_customize ) {
 			'type'    => 'text',
 		)
 	);
+
+	$wp_customize->add_setting(
+		'fbg_earn_min_payout_usd',
+		array(
+			'default'           => 25,
+			'sanitize_callback' => static function ( $v ) {
+				$n = is_numeric( $v ) ? (float) $v : 25;
+				return min( 10000, max( 1, $n ) );
+			},
+		)
+	);
+	$wp_customize->add_control(
+		'fbg_earn_min_payout_usd',
+		array(
+			'label'       => __( 'Minimum payout (USD)', 'free-backlinks-generator' ),
+			'description' => __( 'Partners must request at least this amount from the Earn tab.', 'free-backlinks-generator' ),
+			'section'     => 'fbg_pro_membership',
+			'type'        => 'number',
+			'input_attrs' => array(
+				'min'  => 1,
+				'step' => 1,
+			),
+		)
+	);
 }
 add_action( 'customize_register', 'fbg_customize_theme_options_register' );
 

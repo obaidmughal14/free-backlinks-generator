@@ -241,6 +241,9 @@ function fbg_affiliate_add_engagement( $aff_id, $organic ) {
 		return;
 	}
 
+	$usd_credit   = 0.0;
+	$slots_credit = 0;
+
 	$total = (int) get_user_meta( $aff_id, '_fbg_aff_referral_total', true );
 	++$total;
 	update_user_meta( $aff_id, '_fbg_aff_referral_total', $total );
@@ -258,6 +261,7 @@ function fbg_affiliate_add_engagement( $aff_id, $organic ) {
 			$owed += 2.0 * $add;
 			update_user_meta( $aff_id, '_fbg_aff_balance_usd', $owed );
 			update_user_meta( $aff_id, '_fbg_aff_organic_blocks_paid', $blocks );
+			$usd_credit = 2.0 * $add;
 			if ( function_exists( 'fbg_create_notification' ) ) {
 				fbg_create_notification(
 					$aff_id,
@@ -281,6 +285,7 @@ function fbg_affiliate_add_engagement( $aff_id, $organic ) {
 		$bonus     = fbg_get_user_bonus_post_slots( $aff_id );
 		update_user_meta( $aff_id, '_fbg_bonus_post_slots', $bonus + $add_slots );
 		update_user_meta( $aff_id, '_fbg_aff_slot_blocks_paid', $tblocks );
+		$slots_credit = $add_slots;
 		if ( function_exists( 'fbg_create_notification' ) ) {
 			fbg_create_notification(
 				$aff_id,
@@ -294,6 +299,15 @@ function fbg_affiliate_add_engagement( $aff_id, $organic ) {
 			);
 		}
 	}
+
+	/**
+	 * Log earn-program ledger + monthly chart (usd_credit, slots_credit may be zero).
+	 *
+	 * @param int   $aff_id       Affiliate user ID.
+	 * @param float $usd_credit   USD added this hit’s processing.
+	 * @param int   $slots_credit Slots added this hit’s processing.
+	 */
+	do_action( 'fbg_affiliate_rewards_credited', $aff_id, $usd_credit, $slots_credit );
 }
 
 /**

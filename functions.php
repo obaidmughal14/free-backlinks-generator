@@ -9,12 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.3.5' );
+define( 'FBG_VERSION', '1.4.1' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
 require_once FBG_DIR . '/inc/helpers.php';
 require_once FBG_DIR . '/inc/reading-affiliate.php';
+require_once FBG_DIR . '/inc/earn-program.php';
 require_once FBG_DIR . '/inc/custom-post-types.php';
 require_once FBG_DIR . '/inc/user-roles.php';
 require_once FBG_DIR . '/inc/security.php';
@@ -31,6 +32,7 @@ require_once FBG_DIR . '/inc/support-chat.php';
 require_once FBG_DIR . '/inc/support-tickets.php';
 if ( is_admin() ) {
 	require_once FBG_DIR . '/inc/admin-affiliates.php';
+	require_once FBG_DIR . '/inc/admin-earn.php';
 	require_once FBG_DIR . '/inc/admin-support.php';
 }
 
@@ -349,6 +351,10 @@ function fbg_theme_activation() {
 		fbg_support_register_capabilities();
 	}
 	update_option( 'fbg_support_db_v', 1 );
+	if ( function_exists( 'fbg_create_earn_tables' ) ) {
+		fbg_create_earn_tables();
+	}
+	update_option( 'fbg_earn_db_v', 1 );
 	fbg_seed_taxonomy_terms();
 
 	$pages = array(
@@ -496,6 +502,20 @@ function fbg_maybe_upgrade_support_tables() {
 	update_option( 'fbg_support_db_v', 1 );
 }
 add_action( 'after_setup_theme', 'fbg_maybe_upgrade_support_tables', 20 );
+
+/**
+ * Create earn / payout tables on activation and legacy sites.
+ */
+function fbg_maybe_upgrade_earn_tables() {
+	if ( (int) get_option( 'fbg_earn_db_v', 0 ) >= 1 ) {
+		return;
+	}
+	if ( function_exists( 'fbg_create_earn_tables' ) ) {
+		fbg_create_earn_tables();
+	}
+	update_option( 'fbg_earn_db_v', 1 );
+}
+add_action( 'after_setup_theme', 'fbg_maybe_upgrade_earn_tables', 21 );
 
 /**
  * Create Support ticket page if missing (one-time flag).

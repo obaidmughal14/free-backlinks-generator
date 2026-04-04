@@ -32,6 +32,7 @@ $initial = strtoupper( substr( $user->display_name, 0, 1 ) );
 		<a href="#links" data-tab="links"><?php esc_html_e( '🔗 My Links', 'free-backlinks-generator' ); ?></a>
 		<a href="#upgrade" data-tab="upgrade"><?php esc_html_e( '💎 Plans & Pro', 'free-backlinks-generator' ); ?></a>
 		<a href="#affiliate" data-tab="affiliate"><?php esc_html_e( '🤝 Affiliate', 'free-backlinks-generator' ); ?></a>
+		<a href="#earn" data-tab="earn"><?php esc_html_e( '💰 Earn', 'free-backlinks-generator' ); ?></a>
 		<a href="#profile" data-tab="profile"><?php esc_html_e( '👤 Profile', 'free-backlinks-generator' ); ?></a>
 		<a href="#notifications" data-tab="notifications"><?php esc_html_e( '🔔 Notifications', 'free-backlinks-generator' ); ?> <?php if ( $unread > 0 ) : ?><span class="fbg-badge-count"><?php echo esc_html( (string) $unread ); ?></span><?php endif; ?></a>
 		<a href="#settings" data-tab="settings"><?php esc_html_e( '⚙️ Settings', 'free-backlinks-generator' ); ?></a>

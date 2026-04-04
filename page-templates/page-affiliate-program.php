@@ -103,7 +103,7 @@ $is_partner  = $uid && function_exists( 'fbg_is_user_affiliate_partner' ) ? fbg_
 				</li>
 				<li>
 					<strong><?php esc_html_e( 'You collect balance + slots', 'free-backlinks-generator' ); ?></strong>
-					<?php esc_html_e( 'Organic milestones pay into your USD balance; total milestones grant bonus guest-post slots. Check your dashboard for running totals.', 'free-backlinks-generator' ); ?>
+					<?php esc_html_e( 'Organic milestones pay into your USD balance; total milestones grant bonus guest-post slots. Open your member dashboard → Earn for charts, the activity log, and payout requests.', 'free-backlinks-generator' ); ?>
 				</li>
 			</ol>
 		</div>

@@ -183,6 +183,7 @@ $max_bar     = max( 1, max( array_map( 'intval', $months ) ) );
 		<a class="btn-ghost" href="#links" data-tab-trigger="links"><?php esc_html_e( '📋 View All My Links', 'free-backlinks-generator' ); ?></a>
 		<a class="btn-ghost" href="#upgrade" data-tab-trigger="upgrade"><?php echo $is_pro ? esc_html__( '💎 Plans & billing', 'free-backlinks-generator' ) : esc_html__( '💎 Upgrade to Pro', 'free-backlinks-generator' ); ?></a>
 		<a class="btn-ghost" href="#affiliate" data-tab-trigger="affiliate"><?php esc_html_e( '🤝 Affiliate tools', 'free-backlinks-generator' ); ?></a>
+		<a class="btn-ghost" href="#earn" data-tab-trigger="earn"><?php esc_html_e( '💰 Earn & payouts', 'free-backlinks-generator' ); ?></a>
 		<a class="btn-ghost" href="#profile" data-tab-trigger="profile"><?php esc_html_e( '👤 Edit Profile', 'free-backlinks-generator' ); ?></a>
 	</p>
 </section>

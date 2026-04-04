@@ -22,6 +22,7 @@ get_header();
 		get_template_part( 'template-parts/dashboard', 'links' );
 		get_template_part( 'template-parts/dashboard', 'upgrade' );
 		get_template_part( 'template-parts/dashboard', 'affiliate' );
+		get_template_part( 'template-parts/dashboard', 'earn' );
 		get_template_part( 'template-parts/dashboard', 'profile' );
 		get_template_part( 'template-parts/dashboard', 'notifications' );
 		get_template_part( 'template-parts/dashboard', 'settings' );

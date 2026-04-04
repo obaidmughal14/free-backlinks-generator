@@ -86,6 +86,7 @@ $apply   = home_url( '/affiliate-program/' );
 		</details>
 
 		<p class="fbg-dash-aff-more">
+			<a class="btn-ghost" href="#earn" data-tab-trigger="earn"><?php esc_html_e( 'Earn tab — wallet, charts & payouts', 'free-backlinks-generator' ); ?> →</a>
 			<a class="btn-ghost" href="<?php echo esc_url( $apply ); ?>"><?php esc_html_e( 'Program details & terms', 'free-backlinks-generator' ); ?> →</a>
 		</p>
 	<?php endif; ?>

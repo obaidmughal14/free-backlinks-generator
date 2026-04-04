@@ -240,6 +240,41 @@
 		};
 	}
 
+	var payoutForm = document.getElementById('fbg-earn-payout-form');
+	if (payoutForm) {
+		payoutForm.addEventListener('submit', function (e) {
+			e.preventDefault();
+			var amtEl = document.getElementById('fbg-earn-payout-amount');
+			var noteEl = document.getElementById('fbg-earn-payout-note');
+			var toast = document.getElementById('fbg-earn-payout-toast');
+			if (!amtEl) return;
+			post('fbg_earn_request_payout', {
+				amount: amtEl.value,
+				note: noteEl ? noteEl.value : '',
+			}).then(function (j) {
+				var msg = '';
+				if (j && j.data) {
+					msg = typeof j.data === 'string' ? j.data : j.data.message || '';
+				}
+				if (!msg) {
+					msg = j && j.success ? 'OK' : 'Error';
+				}
+				if (toast) {
+					toast.textContent = msg;
+					toast.hidden = false;
+					toast.className =
+						'fbg-alert ' + (j && j.success ? 'fbg-alert--success' : 'fbg-alert--error');
+				}
+				if (j && j.success) {
+					payoutForm.reset();
+					setTimeout(function () {
+						location.reload();
+					}, 900);
+				}
+			});
+		});
+	}
+
 	document.querySelectorAll('[data-fbg-copy]').forEach(function (btn) {
 		var sel = btn.getAttribute('data-fbg-copy');
 		var orig = btn.textContent;
