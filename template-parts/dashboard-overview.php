@@ -5,6 +5,7 @@
  * @package Free_Backlinks_Generator
  */
 $user_id = get_current_user_id();
+$is_pro         = 'pro' === get_user_meta( $user_id, '_fbg_membership', true );
 $slot_lim       = function_exists( 'fbg_get_user_post_slot_limit' ) ? fbg_get_user_post_slot_limit( $user_id ) : 999;
 $slot_use       = function_exists( 'fbg_count_user_guest_posts_for_cap' ) ? fbg_count_user_guest_posts_for_cap( $user_id ) : 0;
 $can_submit     = function_exists( 'fbg_user_can_create_guest_post' ) ? fbg_user_can_create_guest_post( $user_id ) : true;
@@ -180,6 +181,8 @@ $max_bar     = max( 1, max( array_map( 'intval', $months ) ) );
 			<a class="btn-primary" href="<?php echo esc_url( get_post_type_archive_link( 'fbg_post' ) ); ?>"><?php esc_html_e( 'Read posts to unlock slots', 'free-backlinks-generator' ); ?> →</a>
 		<?php endif; ?>
 		<a class="btn-ghost" href="#links" data-tab-trigger="links"><?php esc_html_e( '📋 View All My Links', 'free-backlinks-generator' ); ?></a>
+		<a class="btn-ghost" href="#upgrade" data-tab-trigger="upgrade"><?php echo $is_pro ? esc_html__( '💎 Plans & billing', 'free-backlinks-generator' ) : esc_html__( '💎 Upgrade to Pro', 'free-backlinks-generator' ); ?></a>
+		<a class="btn-ghost" href="#affiliate" data-tab-trigger="affiliate"><?php esc_html_e( '🤝 Affiliate tools', 'free-backlinks-generator' ); ?></a>
 		<a class="btn-ghost" href="#profile" data-tab-trigger="profile"><?php esc_html_e( '👤 Edit Profile', 'free-backlinks-generator' ); ?></a>
 	</p>
 </section>

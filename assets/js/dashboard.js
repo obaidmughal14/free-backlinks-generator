@@ -231,4 +231,44 @@
 			if (j.success && j.data.redirect) window.location = j.data.redirect;
 		});
 	});
+
+	function copyStrings() {
+		var s = fbgDash && fbgDash.strings ? fbgDash.strings : {};
+		return {
+			copied: s.copied || 'Copied!',
+			copyFailed: s.copyFailed || 'Could not copy',
+		};
+	}
+
+	document.querySelectorAll('[data-fbg-copy]').forEach(function (btn) {
+		var sel = btn.getAttribute('data-fbg-copy');
+		var orig = btn.textContent;
+		btn.addEventListener('click', function () {
+			var el = sel ? document.querySelector(sel) : null;
+			var text = el && (el.value || el.textContent) ? String(el.value || el.textContent).trim() : '';
+			if (!text) return;
+			var str = copyStrings();
+			function done(ok) {
+				btn.textContent = ok ? str.copied : str.copyFailed;
+				setTimeout(function () {
+					btn.textContent = orig;
+				}, 2200);
+			}
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(text).then(function () {
+					done(true);
+				}).catch(function () {
+					done(false);
+				});
+			} else {
+				try {
+					el.select();
+					document.execCommand('copy');
+					done(true);
+				} catch (e) {
+					done(false);
+				}
+			}
+		});
+	});
 })();

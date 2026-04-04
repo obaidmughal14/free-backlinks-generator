@@ -30,12 +30,14 @@ $initial = strtoupper( substr( $user->display_name, 0, 1 ) );
 		<a href="#overview" class="is-active" data-tab="overview"><?php esc_html_e( '📊 Overview', 'free-backlinks-generator' ); ?></a>
 		<a href="#posts" data-tab="posts"><?php esc_html_e( '📝 My Posts', 'free-backlinks-generator' ); ?></a>
 		<a href="#links" data-tab="links"><?php esc_html_e( '🔗 My Links', 'free-backlinks-generator' ); ?></a>
+		<a href="#upgrade" data-tab="upgrade"><?php esc_html_e( '💎 Plans & Pro', 'free-backlinks-generator' ); ?></a>
+		<a href="#affiliate" data-tab="affiliate"><?php esc_html_e( '🤝 Affiliate', 'free-backlinks-generator' ); ?></a>
 		<a href="#profile" data-tab="profile"><?php esc_html_e( '👤 Profile', 'free-backlinks-generator' ); ?></a>
 		<a href="#notifications" data-tab="notifications"><?php esc_html_e( '🔔 Notifications', 'free-backlinks-generator' ); ?> <?php if ( $unread > 0 ) : ?><span class="fbg-badge-count"><?php echo esc_html( (string) $unread ); ?></span><?php endif; ?></a>
 		<a href="#settings" data-tab="settings"><?php esc_html_e( '⚙️ Settings', 'free-backlinks-generator' ); ?></a>
 	</nav>
 	<div class="fbg-dash-upgrade">
-		<button type="button" class="btn-upgrade"><?php esc_html_e( '🚀 Upgrade to Pro', 'free-backlinks-generator' ); ?></button>
+		<button type="button" class="btn-upgrade" data-tab-trigger="upgrade"><?php esc_html_e( '🚀 Upgrade to Pro', 'free-backlinks-generator' ); ?></button>
 		<small><?php esc_html_e( 'Unlimited posts & links', 'free-backlinks-generator' ); ?></small>
 	</div>
 	<a class="fbg-dash-logout" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>"><?php esc_html_e( 'Log Out', 'free-backlinks-generator' ); ?></a>

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.3.2' );
+define( 'FBG_VERSION', '1.3.5' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -135,9 +135,14 @@ function fbg_enqueue_assets() {
 			'fbg-dashboard',
 			'fbgDash',
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'fbg_dashboard_nonce' ),
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'nonce'     => wp_create_nonce( 'fbg_dashboard_nonce' ),
 				'exportUrl' => wp_nonce_url( add_query_arg( 'fbg_export_links', '1', home_url( '/' ) ), 'fbg_export_csv' ),
+				'strings'   => array(
+					'copied'     => __( 'Copied!', 'free-backlinks-generator' ),
+					'copyFailed' => __( 'Could not copy', 'free-backlinks-generator' ),
+					'copyLabel'  => __( 'Copy', 'free-backlinks-generator' ),
+				),
 			)
 		);
 	}

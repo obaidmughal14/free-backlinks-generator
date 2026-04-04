@@ -193,6 +193,42 @@ function fbg_get_affiliate_id_from_cookie() {
 }
 
 /**
+ * Public referral URL for a partner (?fbg_ref= user id, sets attribution cookie).
+ *
+ * @param int $user_id Affiliate WordPress user ID.
+ * @return string
+ */
+function fbg_get_user_affiliate_referral_url( $user_id ) {
+	$uid = absint( $user_id );
+	if ( $uid < 1 ) {
+		return home_url( '/' );
+	}
+	return add_query_arg( 'fbg_ref', $uid, home_url( '/' ) );
+}
+
+/**
+ * Same as referral URL plus UTM parameters for analytics (unique campaign per partner).
+ *
+ * @param int $user_id Affiliate WordPress user ID.
+ * @return string
+ */
+function fbg_get_user_affiliate_utm_url( $user_id ) {
+	$uid = absint( $user_id );
+	if ( $uid < 1 ) {
+		return home_url( '/' );
+	}
+	$base = fbg_get_user_affiliate_referral_url( $uid );
+	return add_query_arg(
+		array(
+			'utm_source'   => 'fbg_partner',
+			'utm_medium'   => 'referral',
+			'utm_campaign' => 'fbg_ref_' . $uid,
+		),
+		$base
+	);
+}
+
+/**
  * Credit affiliate for a referred engagement (blog view, contact, etc.).
  *
  * @param int  $aff_id  Affiliate user ID.

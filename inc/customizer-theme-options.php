@@ -32,7 +32,7 @@ function fbg_customize_theme_options_register( $wp_customize ) {
 		'fbg_theme_panel',
 		array(
 			'title'       => __( 'FBG theme options', 'free-backlinks-generator' ),
-			'description' => __( 'Logo sizing, homepage stats bar, and footer column headings. Assign menus under Appearance → Menus.', 'free-backlinks-generator' ),
+			'description' => __( 'Logo sizing, homepage stats, Pro checkout URLs, and footer column headings. Assign menus under Appearance → Menus.', 'free-backlinks-generator' ),
 			'priority'    => 35,
 		)
 	);
@@ -219,8 +219,131 @@ function fbg_customize_theme_options_register( $wp_customize ) {
 			)
 		);
 	}
+
+	$wp_customize->add_section(
+		'fbg_pro_membership',
+		array(
+			'title'       => __( 'Pro upgrade — checkout URLs', 'free-backlinks-generator' ),
+			'description' => __( 'Paste your Stripe Payment Links, WooCommerce product URLs, or any secure checkout page. These power the Upgrade tab in the member dashboard.', 'free-backlinks-generator' ),
+			'panel'       => 'fbg_theme_panel',
+			'priority'    => 25,
+		)
+	);
+
+	$wp_customize->add_setting(
+		'fbg_pro_checkout_url',
+		array(
+			'default'           => '',
+			'sanitize_callback' => 'esc_url_raw',
+		)
+	);
+	$wp_customize->add_control(
+		'fbg_pro_checkout_url',
+		array(
+			'label'       => __( 'Primary checkout URL (e.g. monthly)', 'free-backlinks-generator' ),
+			'description' => __( 'Required for the “Upgrade to Pro” checkout button.', 'free-backlinks-generator' ),
+			'section'     => 'fbg_pro_membership',
+			'type'        => 'url',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'fbg_pro_checkout_url_annual',
+		array(
+			'default'           => '',
+			'sanitize_callback' => 'esc_url_raw',
+		)
+	);
+	$wp_customize->add_control(
+		'fbg_pro_checkout_url_annual',
+		array(
+			'label'       => __( 'Annual checkout URL (optional)', 'free-backlinks-generator' ),
+			'description' => __( 'Second button on the upgrade page; leave empty to hide.', 'free-backlinks-generator' ),
+			'section'     => 'fbg_pro_membership',
+			'type'        => 'url',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'fbg_pro_billing_portal_url',
+		array(
+			'default'           => '',
+			'sanitize_callback' => 'esc_url_raw',
+		)
+	);
+	$wp_customize->add_control(
+		'fbg_pro_billing_portal_url',
+		array(
+			'label'       => __( 'Customer billing portal URL (optional)', 'free-backlinks-generator' ),
+			'description' => __( 'Stripe Customer Portal or “manage subscription” link shown to Pro members.', 'free-backlinks-generator' ),
+			'section'     => 'fbg_pro_membership',
+			'type'        => 'url',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'fbg_pro_price_monthly',
+		array(
+			'default'           => '$19/mo',
+			'sanitize_callback' => 'sanitize_text_field',
+		)
+	);
+	$wp_customize->add_control(
+		'fbg_pro_price_monthly',
+		array(
+			'label'   => __( 'Displayed price — primary plan', 'free-backlinks-generator' ),
+			'section' => 'fbg_pro_membership',
+			'type'    => 'text',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'fbg_pro_price_annual',
+		array(
+			'default'           => '$190/yr',
+			'sanitize_callback' => 'sanitize_text_field',
+		)
+	);
+	$wp_customize->add_control(
+		'fbg_pro_price_annual',
+		array(
+			'label'   => __( 'Displayed price — annual plan', 'free-backlinks-generator' ),
+			'section' => 'fbg_pro_membership',
+			'type'    => 'text',
+		)
+	);
 }
 add_action( 'customize_register', 'fbg_customize_theme_options_register' );
+
+/**
+ * Pro checkout URL (primary).
+ *
+ * @return string
+ */
+function fbg_get_pro_checkout_url() {
+	$url = get_theme_mod( 'fbg_pro_checkout_url', '' );
+	return $url ? esc_url( $url ) : '';
+}
+
+/**
+ * Pro checkout URL (annual).
+ *
+ * @return string
+ */
+function fbg_get_pro_checkout_url_annual() {
+	$url = get_theme_mod( 'fbg_pro_checkout_url_annual', '' );
+	return $url ? esc_url( $url ) : '';
+}
+
+/**
+ * Stripe (or other) billing portal for existing subscribers.
+ *
+ * @return string
+ */
+function fbg_get_pro_billing_portal_url() {
+	$url = get_theme_mod( 'fbg_pro_billing_portal_url', '' );
+	return $url ? esc_url( $url ) : '';
+}
 
 /**
  * Numeric value for stat animation (strip commas etc.).
