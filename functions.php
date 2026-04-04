@@ -9,11 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.4.1' );
+define( 'FBG_VERSION', '1.4.3' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
 require_once FBG_DIR . '/inc/helpers.php';
+require_once FBG_DIR . '/inc/external-links.php';
+require_once FBG_DIR . '/inc/theme-preference.php';
 require_once FBG_DIR . '/inc/reading-affiliate.php';
 require_once FBG_DIR . '/inc/earn-program.php';
 require_once FBG_DIR . '/inc/custom-post-types.php';

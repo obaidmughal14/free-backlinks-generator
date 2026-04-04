@@ -50,6 +50,8 @@ $comm_url = get_post_type_archive_link( 'fbg_post' );
 
 		<div class="nav-actions">
 
+			<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+
 			<?php if ( is_user_logged_in() ) : ?>
 
 				<a href="<?php echo esc_url( $dash_url ); ?>" class="btn-primary"><?php esc_html_e( 'Dashboard', 'free-backlinks-generator' ); ?> →</a>
@@ -109,6 +111,8 @@ $comm_url = get_post_type_archive_link( 'fbg_post' );
 				?>
 
 				<div class="fbg-nav-drawer__actions">
+
+					<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
 
 					<?php if ( is_user_logged_in() ) : ?>
 

@@ -27,6 +27,7 @@ while ( have_posts() ) :
 			?>
 			<div class="fbg-single-hero__overlay"></div>
 			<div class="fbg-container fbg-single-hero__meta">
+				<div class="fbg-single-hero__inner">
 				<?php if ( $cat_name ) : ?>
 					<span class="fbg-badge"><?php echo esc_html( $cat_name ); ?></span>
 				<?php endif; ?>
@@ -51,6 +52,7 @@ while ( have_posts() ) :
 					);
 					?>
 				</p>
+				</div>
 			</div>
 		</div>
 		<div class="fbg-container fbg-single-layout">

@@ -948,3 +948,126 @@ body.fbg-nav-open {
 .fbg-main {
 	padding-block: var(--space-2xl);
 }
+
+/* Theme toggle */
+.fbg-theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	padding: 0;
+	border-radius: var(--radius-md);
+	border: 1px solid var(--color-border);
+	background: var(--color-bg);
+	color: var(--color-text);
+	cursor: pointer;
+	font-size: 1.15rem;
+	line-height: 1;
+	transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.fbg-theme-toggle:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent-dark);
+}
+.fbg-theme-toggle__icon {
+	display: none;
+	line-height: 1;
+}
+html:not([data-theme='dark']) .fbg-theme-toggle__icon--moon {
+	display: block;
+}
+html[data-theme='dark'] .fbg-theme-toggle__icon--sun {
+	display: block;
+}
+.fbg-nav--home:not(.is-scrolled) .fbg-theme-toggle {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: rgba(255, 255, 255, 0.28);
+	color: #fff;
+}
+.fbg-nav--home:not(.is-scrolled) .fbg-theme-toggle:hover {
+	border-color: rgba(255, 255, 255, 0.55);
+	color: #fff;
+}
+.fbg-nav-drawer__actions .fbg-theme-toggle {
+	margin-bottom: var(--space-sm);
+}
+.fbg-submit-header__actions .fbg-theme-toggle {
+	flex-shrink: 0;
+}
+
+.fbg-dash-theme {
+	margin-top: var(--space-sm);
+}
+.fbg-dash-theme .fbg-theme-toggle {
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.22);
+	color: #fff;
+}
+.fbg-dash-theme .fbg-theme-toggle:hover {
+	border-color: rgba(255, 255, 255, 0.45);
+	color: #fff;
+}
+
+/* Dark mode (html[data-theme="dark"]) */
+html[data-theme='dark'] {
+	color-scheme: dark;
+}
+html[data-theme='dark'] {
+	/* Keep primary dark: sidebars, footer, auth, hero bands use it as background. */
+	--color-primary: #0a0f1e;
+	--color-accent: #6ba3ff;
+	--color-accent-dark: #4f8ef7;
+	--color-mint: #2dd4bf;
+	--color-amber: #fbbf24;
+	--color-red: #f87171;
+	--color-bg: #0b1020;
+	--color-surface: #131b2e;
+	--color-border: #2a3548;
+	--color-text: #e8ebf4;
+	--color-text-secondary: #9ca8c0;
+	--color-text-muted: #6b7a95;
+	--shadow-card: 0 2px 20px rgba(0, 0, 0, 0.35);
+	--shadow-hover: 0 12px 40px rgba(79, 142, 247, 0.2);
+}
+html[data-theme='dark'] .btn-ghost:not(.btn-ghost--on-dark) {
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-tc-btn {
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-submit-header__home,
+html[data-theme='dark'] .fbg-submit-header__back {
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-mkt-prose h2,
+html[data-theme='dark'] .fbg-mkt-prose .fbg-legal-table th {
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-pagination a.page-numbers,
+html[data-theme='dark'] .fbg-pagination span.page-numbers:not(.current) {
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-ticket-page__account-note strong {
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-nav--inner .nav-hamburger {
+	background: var(--color-surface);
+	border-color: var(--color-border);
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-nav-drawer__panel {
+	background: var(--color-surface);
+	color: var(--color-text);
+	border-color: var(--color-border);
+}
+html[data-theme='dark'] .fbg-nav-drawer__links a {
+	color: var(--color-text);
+}
+html[data-theme='dark'] .fbg-community-hero {
+	background: linear-gradient(135deg, #0f172a 0%, #134e4a 45%, #1e1b4b 100%);
+}
+html[data-theme='dark'] .fbg-submit-header {
+	background: var(--color-surface);
+	border-bottom-color: var(--color-border);
+}

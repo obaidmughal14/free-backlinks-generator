@@ -46,6 +46,8 @@ $home_url = home_url( '/' );
 
 		<div class="nav-actions">
 
+			<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+
 			<?php if ( is_user_logged_in() ) : ?>
 
 				<a href="<?php echo esc_url( $home_url ); ?>" class="btn-primary"><?php esc_html_e( 'Go to Homepage', 'free-backlinks-generator' ); ?> →</a>
@@ -105,6 +107,8 @@ $home_url = home_url( '/' );
 				?>
 
 				<div class="fbg-nav-drawer__actions">
+
+					<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
 
 					<?php if ( is_user_logged_in() ) : ?>
 

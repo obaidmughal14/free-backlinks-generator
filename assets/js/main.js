@@ -1,6 +1,39 @@
 (function () {
 	'use strict';
 
+	var themeKey = 'fbg-theme';
+	var root = document.documentElement;
+
+	function syncThemeToggles() {
+		var isDark = root.getAttribute('data-theme') === 'dark';
+		document.querySelectorAll('[data-fbg-theme-toggle]').forEach(function (btn) {
+			btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+		});
+	}
+
+	function setTheme(dark) {
+		if (dark) {
+			root.setAttribute('data-theme', 'dark');
+			try {
+				localStorage.setItem(themeKey, 'dark');
+			} catch (e) {}
+		} else {
+			root.removeAttribute('data-theme');
+			try {
+				localStorage.setItem(themeKey, 'light');
+			} catch (e) {}
+		}
+		syncThemeToggles();
+	}
+
+	document.querySelectorAll('[data-fbg-theme-toggle]').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			var isDark = root.getAttribute('data-theme') === 'dark';
+			setTheme(!isDark);
+		});
+	});
+	syncThemeToggles();
+
 	var nav = document.getElementById('main-nav');
 	if (nav) {
 		window.addEventListener(

@@ -76,20 +76,24 @@ html {
 
 /* —— Single post hero —— */
 .fbg-single-hero {
-	min-height: 0;
+	min-height: clamp(280px, 52vh, 560px);
 }
 
 .fbg-single-hero__img {
-	height: clamp(200px, 50vw, 420px);
+	min-height: 240px;
 }
 
 @media (max-width: 639px) {
-	.fbg-single-hero__img {
-		height: clamp(180px, 52vw, 280px);
+	.fbg-single-hero {
+		min-height: clamp(260px, 48vh, 480px);
+	}
+
+	.fbg-single-hero__inner {
+		padding: var(--space-md) var(--space-md);
 	}
 
 	.fbg-single-hero__meta h1 {
-		font-size: clamp(1.25rem, 5.5vw, 1.65rem);
+		font-size: clamp(1.2rem, 5.5vw, 1.75rem);
 	}
 
 	.fbg-single-layout {
@@ -110,8 +114,8 @@ html {
 }
 
 @media (max-height: 480px) and (orientation: landscape) {
-	.fbg-single-hero__img {
-		height: clamp(120px, 35vh, 200px);
+	.fbg-single-hero {
+		min-height: clamp(200px, 42vh, 320px);
 	}
 }
 
