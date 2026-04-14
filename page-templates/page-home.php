@@ -50,7 +50,9 @@ $comm_url = get_post_type_archive_link( 'fbg_post' );
 
 		<div class="nav-actions">
 
-			<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+			<?php if ( fbg_show_theme_toggle() ) : ?>
+				<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+			<?php endif; ?>
 
 			<?php if ( is_user_logged_in() ) : ?>
 
@@ -112,7 +114,9 @@ $comm_url = get_post_type_archive_link( 'fbg_post' );
 
 				<div class="fbg-nav-drawer__actions">
 
-					<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+					<?php if ( fbg_show_theme_toggle() ) : ?>
+						<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+					<?php endif; ?>
 
 					<?php if ( is_user_logged_in() ) : ?>
 

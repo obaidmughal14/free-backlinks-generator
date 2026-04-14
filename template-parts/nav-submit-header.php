@@ -28,7 +28,9 @@ $dash = home_url( '/dashboard/' );
 
 		<nav class="fbg-submit-header__actions" aria-label="<?php esc_attr_e( 'Submission', 'free-backlinks-generator' ); ?>">
 
-			<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+			<?php if ( fbg_show_theme_toggle() ) : ?>
+				<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
+			<?php endif; ?>
 
 			<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="fbg-submit-header__home"><?php esc_html_e( 'Go to Homepage', 'free-backlinks-generator' ); ?></a>
 

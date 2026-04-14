@@ -1,0 +1,14 @@
+=== Free Backlinks Generator / Community theme ===
+
+= 1.5.0 =
+* Appearance → Customize: full design system (light & dark colors, typography presets, layout width, corner radius).
+* Custom Google Fonts URL + display/body family names for advanced branding.
+* Site behavior: optional dark/light toggle; optional “external links in new tab”.
+* Footer tagline and credit line editable from Customizer.
+* Block editor loads the same color/font variables as the front end.
+* Dynamic Google Fonts enqueue based on Customizer selection.
+* ThemeForest-oriented documentation (documentation/), GPL LICENSE, screenshot.png, sample child theme folder.
+* Version bump for asset cache busting.
+
+= 1.4.x =
+* Single-post hero layout, reader-unlock styling, external link handling, dark mode toggle, responsive tweaks.

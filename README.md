@@ -2,7 +2,7 @@
 
 WordPress theme for a **community guest-post / backlink exchange**: members submit posts with contextual links, browse others’ content, and use a member dashboard. Includes **affiliate attribution**, **read-to-unlock guest-post slots**, and **responsive** front-end CSS.
 
-**Current version:** `1.1.1` (see `style.css` header and `FBG_VERSION` in `functions.php`)
+**Current version:** `1.5.0` (see `style.css` header and `FBG_VERSION` in `functions.php`). Theme options: **Appearance → Customize → Theme options (Community)**. Packaged for marketplace: `documentation/`, `changelog.txt`, `LICENSE`, `screenshot.png`, `child-theme-fbg/`.
 
 **Repository:** [github.com/obaidmughal14/free-backlinks-generator](https://github.com/obaidmughal14/free-backlinks-generator)
 

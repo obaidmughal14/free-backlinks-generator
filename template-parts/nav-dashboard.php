@@ -37,9 +37,11 @@ $initial = strtoupper( substr( $user->display_name, 0, 1 ) );
 		<a href="#notifications" data-tab="notifications"><?php esc_html_e( '🔔 Notifications', 'free-backlinks-generator' ); ?> <?php if ( $unread > 0 ) : ?><span class="fbg-badge-count"><?php echo esc_html( (string) $unread ); ?></span><?php endif; ?></a>
 		<a href="#settings" data-tab="settings"><?php esc_html_e( '⚙️ Settings', 'free-backlinks-generator' ); ?></a>
 	</nav>
+	<?php if ( fbg_show_theme_toggle() ) : ?>
 	<div class="fbg-dash-theme">
 		<?php get_template_part( 'template-parts/theme', 'toggle' ); ?>
 	</div>
+	<?php endif; ?>
 	<div class="fbg-dash-upgrade">
 		<button type="button" class="btn-upgrade" data-tab-trigger="upgrade"><?php esc_html_e( '🚀 Upgrade to Pro', 'free-backlinks-generator' ); ?></button>
 		<small><?php esc_html_e( 'Unlimited posts & links', 'free-backlinks-generator' ); ?></small>

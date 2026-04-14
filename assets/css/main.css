@@ -1,4 +1,5 @@
 :root {
+	--fbg-container-max: 1120px;
 	--color-primary: #0a0f1e;
 	--color-accent: #4f8ef7;
 	--color-accent-dark: #2d6fd4;
@@ -70,7 +71,7 @@ h3 {
 }
 
 .fbg-container {
-	width: min(1120px, 100% - 2 * var(--space-lg));
+	width: min(var(--fbg-container-max, 1120px), calc(100% - 2 * var(--space-lg)));
 	margin-inline: auto;
 }
 

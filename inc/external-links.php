@@ -118,6 +118,9 @@ function fbg_html_external_links_target_blank_dom( $html ) {
  * @return string
  */
 function fbg_the_content_external_links( $content ) {
+	if ( ! fbg_external_links_new_tab_enabled() ) {
+		return $content;
+	}
 	if ( ! is_string( $content ) || '' === $content ) {
 		return $content;
 	}
@@ -132,6 +135,9 @@ add_filter( 'the_content', 'fbg_the_content_external_links', 15 );
  * @return string
  */
 function fbg_widget_text_external_links( $t ) {
+	if ( ! fbg_external_links_new_tab_enabled() ) {
+		return $t;
+	}
 	return fbg_html_external_links_target_blank( $t );
 }
 add_filter( 'widget_text', 'fbg_widget_text_external_links', 15 );
@@ -143,6 +149,9 @@ add_filter( 'widget_text', 'fbg_widget_text_external_links', 15 );
  * @return string
  */
 function fbg_widget_block_external_links( $b ) {
+	if ( ! fbg_external_links_new_tab_enabled() ) {
+		return $b;
+	}
 	return fbg_html_external_links_target_blank( $b );
 }
 add_filter( 'widget_block_content', 'fbg_widget_block_external_links', 15 );
@@ -156,6 +165,9 @@ add_filter( 'widget_block_content', 'fbg_widget_block_external_links', 15 );
  * @return array<string,string>
  */
 function fbg_nav_menu_link_target_blank( $atts, $item, $args ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- $item, $args required by filter signature.
+	if ( ! fbg_external_links_new_tab_enabled() ) {
+		return $atts;
+	}
 	if ( empty( $atts['href'] ) ) {
 		return $atts;
 	}

@@ -31,8 +31,8 @@ function fbg_customize_theme_options_register( $wp_customize ) {
 	$wp_customize->add_panel(
 		'fbg_theme_panel',
 		array(
-			'title'       => __( 'FBG theme options', 'free-backlinks-generator' ),
-			'description' => __( 'Logo sizing, homepage stats, Pro checkout URLs, and footer column headings. Assign menus under Appearance → Menus.', 'free-backlinks-generator' ),
+			'title'       => __( 'Theme options (Community)', 'free-backlinks-generator' ),
+			'description' => __( 'Branding, colors, typography, layout, behavior, logo sizes, homepage stats, Pro checkout URLs, and footer text. Assign menus under Appearance → Menus.', 'free-backlinks-generator' ),
 			'priority'    => 35,
 		)
 	);

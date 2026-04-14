@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FBG_VERSION', '1.4.3' );
+define( 'FBG_VERSION', '1.5.0' );
 define( 'FBG_DIR', get_template_directory() );
 define( 'FBG_URI', get_template_directory_uri() );
 
@@ -23,6 +23,7 @@ require_once FBG_DIR . '/inc/user-roles.php';
 require_once FBG_DIR . '/inc/security.php';
 require_once FBG_DIR . '/inc/customizer-social.php';
 require_once FBG_DIR . '/inc/customizer-theme-options.php';
+require_once FBG_DIR . '/inc/customizer-design.php';
 require_once FBG_DIR . '/inc/menu-fallbacks.php';
 require_once FBG_DIR . '/inc/testimonials-cpt.php';
 require_once FBG_DIR . '/inc/seo.php';
@@ -107,13 +108,13 @@ add_action( 'widgets_init', 'fbg_widgets_init' );
  * Enqueue front-end assets.
  */
 function fbg_enqueue_assets() {
-	wp_enqueue_style(
-		'fbg-fonts',
-		'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap',
-		array(),
-		null
-	);
-	wp_enqueue_style( 'fbg-main', FBG_URI . '/assets/css/main.css', array(), FBG_VERSION );
+	$font_deps = array();
+	$fonts_url = function_exists( 'fbg_get_google_fonts_stylesheet_url' ) ? fbg_get_google_fonts_stylesheet_url() : '';
+	if ( $fonts_url ) {
+		wp_enqueue_style( 'fbg-fonts', $fonts_url, array(), null );
+		$font_deps[] = 'fbg-fonts';
+	}
+	wp_enqueue_style( 'fbg-main', FBG_URI . '/assets/css/main.css', $font_deps, FBG_VERSION );
 
 	if ( is_page_template( 'page-templates/page-home.php' ) ) {
 		wp_enqueue_script( 'fbg-testimonials', FBG_URI . '/assets/js/testimonials-carousel.js', array(), FBG_VERSION, true );

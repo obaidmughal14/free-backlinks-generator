@@ -1,0 +1,17 @@
+ThemeForest / Envato — manual checklist (not automated by the theme)
+================================================================
+
+Before upload, complete these marketplace-specific items:
+
+[ ] Replace screenshot.png with your final 1200×900 (or JPG per current TF rules) branded preview.
+[ ] Prepare live demo URL + demo account (if required by your listing tier).
+[ ] Write item description, feature list, and “what you get” (ZIP includes parent theme + documentation folder + note about child theme path).
+[ ] Host documentation (or bundle as TF allows) — see documentation/index.html.
+[ ] Support policy: decide response time and whether you include installation as a paid service.
+[ ] Update child-theme-fbg/style.css Author fields for buyers who use the sample child theme.
+[ ] Run Theme Check plugin + PHPCS (WPCS) on a clean WordPress install.
+[ ] Test Customizer: all color pickers, font presets, custom font URL, container width, radius, toggles, footer strings.
+[ ] Test with a common SEO plugin if you claim compatibility.
+[ ] GDPR / privacy: ensure your site policy pages match how you use cookies (referral, auth, etc.).
+
+Theme ships with: LICENSE (GPL-2.0+), changelog.txt, screenshot.png, documentation/, child-theme-fbg/.
